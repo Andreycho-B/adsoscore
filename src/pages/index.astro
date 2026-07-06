@@ -2,139 +2,162 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
-<BaseLayout title="ADSOscore - Encuentra las mejores empresas para tu aprendizaje">
-  <div class="min-h-screen bg-white">
-    <!-- Header -->
-    <header class="bg-white border-b border-[#E5E7EB]">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-          <div class="flex items-center gap-2">
-            <span class="text-xl font-bold text-[#1E3A5F]">ADSOscore</span>
-          </div>
-          <nav class="flex items-center gap-6">
-            <a href="#features" class="text-sm font-medium text-[#6B7280] hover:text-[#111827]">
-              Caracteristicas
-            </a>
-            <a href="/login" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-[#1E3A5F] rounded-md hover:bg-[#2D5A8F] transition-colors">
-              Iniciar sesion
-            </a>
-          </nav>
-        </div>
+<BaseLayout title="ADSOscore - Evaluador de empresas ADS para aprendices del SENA">
+  <header style="position:sticky;top:0;z-index:20;background:rgba(255,255,255,0.86);backdrop-filter:blur(12px);border-bottom:1px solid var(--color-border-secondary);">
+    <div class="wrap" style="display:flex;align-items:center;justify-content:space-between;height:64px;gap:24px;">
+      <span style="font-weight:600;font-size:18px;letter-spacing:-0.01em;color:var(--color-text);white-space:nowrap;">ADSOscore</span>
+      <nav style="display:flex;gap:28px;align-items:center;color:var(--color-text-secondary);">
+        <a href="#como-funciona" style="color:var(--color-text-secondary);transition:color 0.15s ease;">Como funciona</a>
+        <a href="#caracteristicas" style="color:var(--color-text-secondary);transition:color 0.15s ease;">Caracteristicas</a>
+      </nav>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <a href="/login" class="btn-primary" style="height:32px;padding:0 12px;font-size:12px;">Iniciar sesion</a>
       </div>
-    </header>
+    </div>
+  </header>
 
-    <!-- Hero -->
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-      <div class="text-center max-w-3xl mx-auto">
-        <h1 class="text-4xl sm:text-5xl font-bold text-[#111827] mb-6 leading-tight">
-          Encuentra las mejores empresas para tu aprendizaje
-        </h1>
-        <p class="text-lg text-[#6B7280] mb-8">
-          Evalua empresas del SGVA con scores inteligentes basados en GitHub, RUES, ubicacion y mas.
-          Toma decisiones informadas sobre tu futuro profesional.
-        </p>
-        <div class="flex justify-center gap-4">
-          <a
-            href="/login"
-            class="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-white bg-[#1E3A5F] rounded-lg hover:bg-[#2D5A8F] transition-colors"
-          >
-            Comenzar ahora
-          </a>
-          <a
-            href="/dashboard"
-            class="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-[#111827] bg-white border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] transition-colors"
-          >
-            Ver ofertas
-          </a>
+  <main>
+    <section class="wrap" style="padding-top:clamp(56px, 9vw, 108px);text-align:center;">
+      <div style="max-width:860px;margin:0 auto;">
+        <span class="kicker">Evaluacion de empresas ADS</span>
+        <h1 style="font-size:clamp(36px, 5.6vw, 64px);letter-spacing:-0.025em;line-height:1.06;margin:24px auto 20px;max-width:18ch;">Encuentra la empresa ideal para tu aprendizaje</h1>
+        <p style="font-size:22px;color:var(--color-text-secondary);max-width:62ch;margin:0 auto 32px;line-height:1.5;">Evalua empresas del SGVA con scores inteligentes basados en GitHub, RUES, ubicacion y mas. Toma decisiones informadas sobre tu futuro profesional.</p>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+          <a href="/login" class="btn-primary">Comenzar ahora</a>
+          <a href="#como-funciona" class="btn-secondary">Ver como funciona</a>
         </div>
+        <p style="margin-top:20px;font-size:12px;color:var(--color-text-tertiary);">Gratuito para aprendices del SENA</p>
       </div>
     </section>
 
-    <!-- Features -->
-    <section id="features" class="bg-[#F9FAFB] py-20">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12">
-          <h2 class="text-3xl font-bold text-[#111827] mb-4">Por que usar ADSOscore</h2>
-          <p class="text-[#6B7280] max-w-2xl mx-auto">
-            Herramientas disenas para ayudarte a encontrar la mejor empresa de aprendizaje
-          </p>
+    <section id="como-funciona" class="wrap" style="padding:clamp(64px, 9vw, 104px) 0;">
+      <div style="max-width:680px;margin:0 auto 48px;text-align:center;">
+        <span class="kicker">Como funciona</span>
+        <h2 style="font-size:clamp(26px, 3.2vw, 38px);letter-spacing:-0.015em;margin-bottom:12px;">Tres pasos para elegir bien</h2>
+        <p style="color:var(--color-text-secondary);font-size:18px;">Sin complicaciones. Sin registro complicado. Empieza a evaluar en minutos.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:clamp(24px, 4vw, 48px);">
+        <div style="display:flex;flex-direction:column;gap:20px;">
+          <div style="aspect-ratio:124/108;border:1px solid var(--color-border-secondary);border-radius:10px;background:var(--color-bg-layout);padding:24px;display:flex;align-items:center;justify-content:center;">
+            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="var(--color-primary)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </div>
+          <div>
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--color-primary);color:#fff;font-size:12px;font-weight:600;">1</span>
+              <h3 style="font-size:22px;">Explora ofertas</h3>
+            </div>
+            <p style="color:var(--color-text-secondary);max-width:34ch;">Navega por ofertas de aprendizaje filtradas por departamento, ciudad y modalidad.</p>
+          </div>
         </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <!-- Feature 1 -->
-          <div class="bg-white rounded-lg border border-[#E5E7EB] p-6">
-            <div class="w-10 h-10 bg-[#1E3A5F]/10 rounded-lg flex items-center justify-center mb-4">
-              <svg class="w-5 h-5 text-[#1E3A5F]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </div>
-            <h3 class="text-lg font-semibold text-[#111827] mb-2">Scores inteligentes</h3>
-            <p class="text-[#6B7280]">
-              Cada empresa tiene un score basado en 10 parametros: GitHub, RUES, Glassdoor, ubicacion y mas.
-            </p>
+        <div style="display:flex;flex-direction:column;gap:20px;">
+          <div style="aspect-ratio:124/108;border:1px solid var(--color-border-secondary);border-radius:10px;background:var(--color-bg-layout);padding:24px;display:flex;align-items:center;justify-content:center;">
+            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="var(--color-primary)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
           </div>
-
-          <!-- Feature 2 -->
-          <div class="bg-white rounded-lg border border-[#E5E7EB] p-6">
-            <div class="w-10 h-10 bg-[#059669]/10 rounded-lg flex items-center justify-center mb-4">
-              <svg class="w-5 h-5 text-[#059669]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
+          <div>
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--color-primary);color:#fff;font-size:12px;font-weight:600;">2</span>
+              <h3 style="font-size:22px;">Compara scores</h3>
             </div>
-            <h3 class="text-lg font-semibold text-[#111827] mb-2">Resenas verificadas</h3>
-            <p class="text-[#6B7280]">
-              Lee resenas de otros aprendices que ya pasaron por la empresa. Sistema anti-fraude incluido.
-            </p>
+            <p style="color:var(--color-text-secondary);max-width:34ch;">Cada empresa tiene un score basado en multiples parametros de evaluacion.</p>
           </div>
-
-          <!-- Feature 3 -->
-          <div class="bg-white rounded-lg border border-[#E5E7EB] p-6">
-            <div class="w-10 h-10 bg-[#2563EB]/10 rounded-lg flex items-center justify-center mb-4">
-              <svg class="w-5 h-5 text-[#2563EB]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-              </svg>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:20px;">
+          <div style="aspect-ratio:124/108;border:1px solid var(--color-border-secondary);border-radius:10px;background:var(--color-bg-layout);padding:24px;display:flex;align-items:center;justify-content:center;">
+            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="var(--color-primary)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+            </svg>
+          </div>
+          <div>
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--color-primary);color:#fff;font-size:12px;font-weight:600;">3</span>
+              <h3 style="font-size:22px;">Elige con confianza</h3>
             </div>
-            <h3 class="text-lg font-semibold text-[#111827] mb-2">Filtros avanzados</h3>
-            <p class="text-[#6B7280]">
-              Filtra por departamento, ciudad, modalidad, tags y mas. Encuentra exactamente lo que buscas.
-            </p>
+            <p style="color:var(--color-text-secondary);max-width:34ch;">Lee resenas de otros aprendices y toma la mejor decision para tu formacion.</p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- CTA -->
-    <section class="py-20">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h2 class="text-3xl font-bold text-[#111827] mb-4">Comienza hoy</h2>
-        <p class="text-[#6B7280] mb-8 max-w-xl mx-auto">
-          Unete a otros aprendices del SENA que ya estan tomando decisiones informadas sobre su futuro profesional.
-        </p>
-        <a
-          href="/login"
-          class="inline-flex items-center justify-center px-8 py-3 text-base font-medium text-white bg-[#1E3A5F] rounded-lg hover:bg-[#2D5A8F] transition-colors"
-        >
-          Crear cuenta gratis
-        </a>
+    <section id="caracteristicas" style="background:var(--color-bg-container);border-top:1px solid var(--color-border-secondary);border-bottom:1px solid var(--color-border-secondary);padding:clamp(64px, 9vw, 104px) 0;">
+      <div class="wrap">
+        <div style="max-width:680px;margin:0 auto 48px;text-align:center;">
+          <span class="kicker">Caracteristicas</span>
+          <h2 style="font-size:clamp(26px, 3.2vw, 38px);letter-spacing:-0.015em;margin-bottom:12px;">Todo lo que necesitas para decidir</h2>
+          <p style="color:var(--color-text-secondary);font-size:18px;">Herramientas disenadas para ayudarte a encontrar la mejor empresa de aprendizaje.</p>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:clamp(14px, 1.8vw, 20px);">
+          <div style="background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:32px;box-shadow:0 1px 2px var(--color-fill-quaternary);display:flex;flex-direction:column;">
+            <div style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;background:var(--color-primary-bg);color:var(--color-primary);margin-bottom:20px;">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+              </svg>
+            </div>
+            <h3 style="font-size:22px;margin-bottom:8px;">Scores inteligentes</h3>
+            <p style="color:var(--color-text-secondary);">Cada empresa tiene un score basado en 10 parametros: GitHub, RUES, Glassdoor, ubicacion y mas.</p>
+          </div>
+          <div style="background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:32px;box-shadow:0 1px 2px var(--color-fill-quaternary);display:flex;flex-direction:column;">
+            <div style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;background:var(--color-primary-bg);color:var(--color-primary);margin-bottom:20px;">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+              </svg>
+            </div>
+            <h3 style="font-size:22px;margin-bottom:8px;">Resenas verificadas</h3>
+            <p style="color:var(--color-text-secondary);">Lee resenas de otros aprendices que ya pasaron por la empresa. Sistema anti-fraude incluido.</p>
+          </div>
+          <div style="background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:32px;box-shadow:0 1px 2px var(--color-fill-quaternary);display:flex;flex-direction:column;">
+            <div style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;background:var(--color-primary-bg);color:var(--color-primary);margin-bottom:20px;">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+              </svg>
+            </div>
+            <h3 style="font-size:22px;margin-bottom:8px;">Filtros avanzados</h3>
+            <p style="color:var(--color-text-secondary);">Filtra por departamento, ciudad, modalidad, tags y mas. Encuentra exactamente lo que buscas.</p>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="bg-[#111827] text-white py-12">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex flex-col md:flex-row justify-between items-center">
-          <div class="mb-4 md:mb-0">
-            <span class="text-xl font-bold">ADSOscore</span>
-            <p class="text-sm text-[#9CA3AF] mt-1">Plataforma de evaluacion de empresas para aprendices ADS</p>
-          </div>
-          <div class="flex gap-6 text-sm text-[#9CA3AF]">
-            <span>Hecho para aprendices del SENA</span>
-          </div>
+    <section class="wrap" style="padding:0 0 clamp(56px, 8vw, 88px);">
+      <div style="border:1px solid var(--color-primary-bg);background:var(--color-primary-bg);border-radius:clamp(14px, 2vw, 20px);padding:clamp(24px, 4vw, 36px) clamp(24px, 5vw, 48px);display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;">
+        <div style="min-width:0;">
+          <h3 style="font-size:clamp(20px, 2.4vw, 26px);letter-spacing:-0.01em;">Empieza a evaluar empresas hoy</h3>
+          <p style="color:var(--color-text-secondary);margin-top:4px;">Gratuito para aprendices del SENA. Sin registro complicado.</p>
         </div>
-        <div class="border-t border-[#374151] mt-8 pt-8 text-center text-sm text-[#6B7280]">
-          ADSOscore - Sistema de Graduacion de Vacantes de Aprendizaje
+        <a href="/login" class="btn-primary">Crear cuenta gratis</a>
+      </div>
+    </section>
+
+    <section style="background:var(--color-primary);padding:clamp(48px, 6vw, 64px) 0;">
+      <div class="wrap" style="display:grid;grid-template-columns:repeat(3, 1fr);gap:32px;">
+        <div style="text-align:center;">
+          <div style="font-size:clamp(30px, 3.6vw, 46px);font-weight:600;line-height:1.05;color:#fff;letter-spacing:-0.02em;">136+</div>
+          <div style="margin-top:4px;font-size:12px;color:rgba(255,255,255,0.78);">Ofertas evaluadas</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:clamp(30px, 3.6vw, 46px);font-weight:600;line-height:1.05;color:#fff;letter-spacing:-0.02em;">10</div>
+          <div style="margin-top:4px;font-size:12px;color:rgba(255,255,255,0.78);">Parámetros de evaluación</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:clamp(30px, 3.6vw, 46px);font-weight:600;line-height:1.05;color:#fff;letter-spacing:-0.02em;">5</div>
+          <div style="margin-top:4px;font-size:12px;color:rgba(255,255,255,0.78);">Departamentos cubiertos</div>
         </div>
       </div>
-    </footer>
-  </div>
+    </section>
+  </main>
+
+  <footer style="background:var(--color-primary-dark);padding:48px 0;">
+    <div class="wrap">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:16px;">
+        <span style="font-weight:600;font-size:18px;color:#fff;">ADSOscore</span>
+        <p style="font-size:12px;color:rgba(255,255,255,0.6);text-align:center;">Plataforma de evaluacion de empresas para aprendices ADS del SENA</p>
+        <div style="border-top:1px solid rgba(255,255,255,0.12);width:100%;padding-top:16px;text-align:center;font-size:12px;color:rgba(255,255,255,0.4);">
+          Sistema de Graduacion de Vacantes de Aprendizaje
+        </div>
+      </div>
+    </div>
+  </footer>
 </BaseLayout>
