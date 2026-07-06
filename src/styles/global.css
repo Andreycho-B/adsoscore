@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+@theme {
+  /* Colores Corporativos */
+  --color-primary: #1E3A5F;
+  --color-primary-light: #2D5A8F;
+  --color-primary-dark: #152C4A;
+
+  --color-success: #059669;
+  --color-success-light: #D1FAE5;
+  --color-warning: #D97706;
+  --color-warning-light: #FEF3C7;
+  --color-error: #DC2626;
+  --color-error-light: #FEE2E2;
+  --color-info: #2563EB;
+  --color-info-light: #DBEAFE;
+
+  --color-text: #111827;
+  --color-text-secondary: #6B7280;
+  --color-text-muted: #9CA3AF;
+
+  --color-background: #FFFFFF;
+  --color-surface: #F9FAFB;
+  --color-border: #E5E7EB;
+
+  /* Tipografía */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Espaciado */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  --spacing-3xl: 64px;
+
+  /* Bordes */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Sombras */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+/* Base */
+html {
+  font-family: var(--font-sans);
+  color: var(--color-text);
+  background-color: var(--color-surface);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-text-muted);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+/* Focus visible */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Selección de texto */
+::selection {
+  background-color: var(--color-primary);
+  color: white;
+}

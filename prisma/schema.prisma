@@ -1,0 +1,226 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Usuarios
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  image         String?
+  provider      String    // "google" | "github"
+  providerId    String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relaciones
+  reviews       Review[]
+  favorites     Favorite[]
+  notifications Notification[]
+  reports       Report[]
+  consent       Consent[]
+  helpfulVotes  HelpfulVote[]
+
+  @@unique([provider, providerId])
+}
+
+// Ofertas de aprendizaje del SGVA
+model Offer {
+  id            String    @id @default(cuid())
+  sgvaId        String    @unique // ID original en SGVA
+  titulo        String
+  empresa       String
+  nit           String?
+  descripcion   String?
+  funciones     String?
+  perfil        String?
+  ciudad        String?
+  departamento  String?
+  direccion     String?
+  telefono      String?
+  contacto      String?
+  email         String?
+  modalidad     String?   // "Presencial" | "Remoto" | "Hibrido"
+  fechaPublicacion DateTime?
+  fechaCierre   DateTime?
+  
+  // Score
+  score         Float     @default(0)
+  scoreGitHub   Float     @default(0)
+  scoreFunciones Float    @default(0)
+  scoreRUES     Float     @default(0)
+  scoreUbicacion Float    @default(0)
+  scoreModalidad Float    @default(0)
+  scoreResenas  Float     @default(0)
+  scoreLinkedIn Float     @default(0)
+  scoreTamano   Float     @default(0)
+  scoreAntiguedad Float   @default(0)
+  
+  // Metadatos de enriquecimiento
+  ruesData      Json?
+  githubData    Json?
+  linkedinData  Json?
+  glassdoorData Json?
+  
+  // Estado
+  isActive      Boolean   @default(true)
+  isVisible     Boolean   @default(true)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relaciones
+  reviews       Review[]
+  favorites     Favorite[]
+  tags          OfferTag[]
+  reports       Report[]
+
+  @@index([score(sort: Desc)])
+  @@index([departamento])
+  @@index([ciudad])
+  @@index([modalidad])
+  @@index([isActive])
+}
+
+// Reseñas de usuarios
+model Review {
+  id            String    @id @default(cuid())
+  content       String
+  rating        Int       // 1-5
+  helpfulCount  Int       @default(0)
+  notHelpfulCount Int     @default(0)
+  
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  
+  offerId       String
+  offer         Offer     @relation(fields: [offerId], references: [id])
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relaciones
+  helpfulVotes  HelpfulVote[]
+
+  @@unique([userId, offerId])
+  @@index([helpfulCount(sort: Desc)])
+}
+
+// Votos de utilidad
+model HelpfulVote {
+  id            String    @id @default(cuid())
+  isHelpful     Boolean   // true = util, false = no util
+  
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  
+  reviewId      String
+  review        Review    @relation(fields: [reviewId], references: [id])
+  
+  createdAt     DateTime  @default(now())
+
+  @@unique([userId, reviewId])
+}
+
+// Favoritos
+model Favorite {
+  id            String    @id @default(cuid())
+  
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  
+  offerId       String
+  offer         Offer     @relation(fields: [offerId], references: [id])
+  
+  createdAt     DateTime  @default(now())
+
+  @@unique([userId, offerId])
+}
+
+// Tags para empresas
+model Tag {
+  id            String    @id @default(cuid())
+  name          String    @unique
+  slug          String    @unique
+  
+  offers        OfferTag[]
+}
+
+// Relacion-offers-tags
+model OfferTag {
+  id            String    @id @default(cuid())
+  
+  offerId       String
+  offer         Offer     @relation(fields: [offerId], references: [id])
+  
+  tagId         String
+  tag           Tag       @relation(fields: [tagId], references: [id])
+
+  @@unique([offerId, tagId])
+}
+
+// Notificaciones in-app
+model Notification {
+  id            String    @id @default(cuid())
+  title         String
+  message       String
+  type          String    // "new_offer" | "review_update" | "system"
+  isRead        Boolean   @default(false)
+  link          String?
+  
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  
+  createdAt     DateTime  @default(now())
+
+  @@index([userId, isRead])
+}
+
+// Reportes de ofertas
+model Report {
+  id            String    @id @default(cuid())
+  reason        String    // "no_existe" | "empresa_falsa" | "info_incorrecta" | "otro"
+  description   String?
+  status        String    @default("pending") // "pending" | "reviewed" | "resolved"
+  
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  
+  offerId       String
+  offer         Offer     @relation(fields: [offerId], references: [id])
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([status])
+}
+
+// Consentimiento de usuario (LGPD)
+model Consent {
+  id            String    @id @default(cuid())
+  consentType   String    // "marketing" | "reviews" | "analytics"
+  granted       Boolean
+  grantedAt     DateTime  @default(now())
+  revokedAt     DateTime?
+  ipAddress     String?
+  userAgent     String?
+  
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+
+  @@unique([userId, consentType])
+}
+
+// Configuracion del sistema
+model SystemConfig {
+  id            String    @id @default(cuid())
+  key           String    @unique
+  value         String
+  description   String?
+  
+  updatedAt     DateTime  @updatedAt
+}
