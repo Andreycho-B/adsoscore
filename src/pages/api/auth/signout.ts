@@ -1,11 +1,13 @@
 import type { APIRoute } from 'astro';
+import { clearSession } from '../../../lib/auth';
 
-export const GET: APIRoute = async () => {
+export const GET: APIRoute = async (context) => {
+  clearSession(context);
+
   return new Response(null, {
     status: 302,
     headers: {
       Location: '/',
-      'Set-Cookie': 'session_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0',
     },
   });
 };
