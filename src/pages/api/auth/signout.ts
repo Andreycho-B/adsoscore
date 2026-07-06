@@ -1,9 +1,11 @@
 import type { APIRoute } from 'astro';
 
-export const POST: APIRoute = async ({ cookies }) => {
-  cookies.delete('session', { path: '/' });
-
-  return new Response(JSON.stringify({ success: true }), {
-    headers: { 'Content-Type': 'application/json' },
+export const GET: APIRoute = async () => {
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: '/',
+      'Set-Cookie': 'session_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0',
+    },
   });
 };
