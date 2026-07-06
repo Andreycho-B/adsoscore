@@ -60,7 +60,11 @@ export function getSession(context: APIContext): Session {
     return { user: null };
   }
 
-  const secret = import.meta.env.AUTH_SECRET || 'fallback-secret';
+  const secret = import.meta.env.AUTH_SECRET;
+  if (!secret) {
+    console.error('[Auth] AUTH_SECRET environment variable is not set');
+    return { user: null };
+  }
   const payload = verifyJWT(token, secret) as Record<string, unknown> | null;
 
   if (!payload || !payload.user) {
@@ -71,7 +75,11 @@ export function getSession(context: APIContext): Session {
 }
 
 export function setSession(context: APIContext, user: SessionUser): void {
-  const secret = import.meta.env.AUTH_SECRET || 'fallback-secret';
+  const secret = import.meta.env.AUTH_SECRET;
+  if (!secret) {
+    console.error('[Auth] AUTH_SECRET environment variable is not set');
+    return;
+  }
   const token = createJWT({ user }, secret);
   
   context.cookies.set('session_token', token, {
@@ -135,6 +143,7 @@ export async function exchangeGoogleCode(code: string): Promise<SessionUser | nu
         name: userData.name,
         image: userData.picture,
         provider: 'google',
+        providerId: userData.id,
       },
       update: {
         name: userData.name,
@@ -149,7 +158,8 @@ export async function exchangeGoogleCode(code: string): Promise<SessionUser | nu
       image: user.image,
       provider: 'google',
     };
-  } catch {
+  } catch (error) {
+    console.error('[Auth] Google OAuth error:', error instanceof Error ? error.message : 'Unknown error');
     return null;
   }
 }
@@ -189,6 +199,7 @@ export async function exchangeGitHubCode(code: string): Promise<SessionUser | nu
         name: userData.name || userData.login,
         image: userData.avatar_url,
         provider: 'github',
+        providerId: String(userData.id),
       },
       update: {
         name: userData.name || userData.login,
@@ -203,7 +214,8 @@ export async function exchangeGitHubCode(code: string): Promise<SessionUser | nu
       image: user.image,
       provider: 'github',
     };
-  } catch {
+  } catch (error) {
+    console.error('[Auth] GitHub OAuth error:', error instanceof Error ? error.message : 'Unknown error');
     return null;
   }
 }
