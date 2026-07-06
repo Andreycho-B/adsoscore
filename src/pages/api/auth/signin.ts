@@ -1,5 +1,4 @@
 import type { APIRoute } from 'astro';
-import { prisma } from '../../../lib/prisma';
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   const formData = await request.formData();
