@@ -9,7 +9,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <div style="display:flex;align-items:center;gap:12px;">
           <a href="/" style="font-weight:600;font-size:18px;letter-spacing:-0.01em;color:var(--color-primary);text-decoration:none;">ADSOscore</a>
         </div>
-        <nav style="display:flex;gap:28px;align-items:center;">
+        <nav aria-label="Navegacion principal" style="display:flex;gap:28px;align-items:center;">
           <a href="/dashboard" style="font-size:14px;font-weight:600;color:var(--color-primary);text-decoration:none;">Ofertas</a>
           <a href="/favorites" style="font-size:14px;font-weight:500;color:var(--color-text-secondary);text-decoration:none;transition:color 0.15s ease;">Favoritos</a>
           <a href="/notifications" style="font-size:14px;font-weight:500;color:var(--color-text-secondary);text-decoration:none;transition:color 0.15s ease;">Notificaciones</a>
@@ -20,13 +20,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       </div>
     </header>
 
-    <main class="wrap" style="padding-top:32px;padding-bottom:48px;">
+    <main class="wrap" id="main-content" style="padding-top:32px;padding-bottom:48px;">
+      <h1 class="sr-only">Dashboard de ofertas</h1>
       <div style="background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:20px;margin-bottom:24px;">
-        <h2 style="font-size:14px;font-weight:600;color:var(--color-text);margin-bottom:16px;">Filtros</h2>
+        <p style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;color:var(--color-primary);margin-bottom:16px;">Filtros</p>
         <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:16px;">
           <div>
-            <label style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px;font-size:12px;font-weight:600;color:var(--color-text);">Departamento</label>
-            <select style="box-sizing:border-box;width:100%;font-family:var(--font-sans);font-size:14px;color:var(--color-text);background:var(--color-bg-container);border:1px solid var(--color-border);border-radius:8px;outline:none;height:32px;padding:0 12px;">
+            <label for="departamento" style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px;font-size:12px;font-weight:600;color:var(--color-text);">Departamento</label>
+            <select id="departamento" style="box-sizing:border-box;width:100%;font-family:var(--font-sans);font-size:14px;color:var(--color-text);background:var(--color-bg-container);border:1px solid var(--color-border);border-radius:8px;outline:none;height:32px;padding:0 12px;">
               <option value="">Todos</option>
               <option value="Caldas">Caldas</option>
               <option value="Risaralda">Risaralda</option>
@@ -36,8 +37,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             </select>
           </div>
           <div>
-            <label style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px;font-size:12px;font-weight:600;color:var(--color-text);">Ciudad</label>
-            <select style="box-sizing:border-box;width:100%;font-family:var(--font-sans);font-size:14px;color:var(--color-text);background:var(--color-bg-container);border:1px solid var(--color-border);border-radius:8px;outline:none;height:32px;padding:0 12px;">
+            <label for="ciudad" style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px;font-size:12px;font-weight:600;color:var(--color-text);">Ciudad</label>
+            <select id="ciudad" style="box-sizing:border-box;width:100%;font-family:var(--font-sans);font-size:14px;color:var(--color-text);background:var(--color-bg-container);border:1px solid var(--color-border);border-radius:8px;outline:none;height:32px;padding:0 12px;">
               <option value="">Todas</option>
               <option value="Manizales">Manizales</option>
               <option value="Pereira">Pereira</option>
@@ -47,8 +48,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             </select>
           </div>
           <div>
-            <label style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px;font-size:12px;font-weight:600;color:var(--color-text);">Modalidad</label>
-            <select style="box-sizing:border-box;width:100%;font-family:var(--font-sans);font-size:14px;color:var(--color-text);background:var(--color-bg-container);border:1px solid var(--color-border);border-radius:8px;outline:none;height:32px;padding:0 12px;">
+            <label for="modalidad" style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px;font-size:12px;font-weight:600;color:var(--color-text);">Modalidad</label>
+            <select id="modalidad" style="box-sizing:border-box;width:100%;font-family:var(--font-sans);font-size:14px;color:var(--color-text);background:var(--color-bg-container);border:1px solid var(--color-border);border-radius:8px;outline:none;height:32px;padding:0 12px;">
               <option value="">Todas</option>
               <option value="Remoto">Remoto</option>
               <option value="Presencial">Presencial</option>
@@ -56,8 +57,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             </select>
           </div>
           <div>
-            <label style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px;font-size:12px;font-weight:600;color:var(--color-text);">Tipo de empresa</label>
-            <select style="box-sizing:border-box;width:100%;font-family:var(--font-sans);font-size:14px;color:var(--color-text);background:var(--color-bg-container);border:1px solid var(--color-border);border-radius:8px;outline:none;height:32px;padding:0 12px;">
+            <label for="tipo-empresa" style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px;font-size:12px;font-weight:600;color:var(--color-text);">Tipo de empresa</label>
+            <select id="tipo-empresa" style="box-sizing:border-box;width:100%;font-family:var(--font-sans);font-size:14px;color:var(--color-text);background:var(--color-bg-container);border:1px solid var(--color-border);border-radius:8px;outline:none;height:32px;padding:0 12px;">
               <option value="">Todas</option>
               <option value="startup">Startup</option>
               <option value="consultora">Consultora</option>
@@ -73,7 +74,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           <div style="display:flex;align-items:flex-start;justify-content:space-between;">
             <div style="flex:1;">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                <h3 style="font-size:18px;font-weight:600;color:var(--color-text);">Desarrollador Full Stack</h3>
+                <h3 style="font-size:22px;font-weight:600;color:var(--color-text);">Desarrollador Full Stack</h3>
                 <span style="display:inline-flex;align-items:center;height:24px;padding:0 8px;font-size:12px;font-weight:500;background:var(--color-success-bg);color:var(--color-success);border-radius:5px;">Remoto</span>
               </div>
               <p style="font-size:14px;color:var(--color-text-secondary);margin-bottom:12px;">Tech Solutions S.A.S</p>
@@ -100,7 +101,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           <div style="display:flex;align-items:flex-start;justify-content:space-between;">
             <div style="flex:1;">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                <h3 style="font-size:18px;font-weight:600;color:var(--color-text);">Practicante de Desarrollo</h3>
+                <h3 style="font-size:22px;font-weight:600;color:var(--color-text);">Practicante de Desarrollo</h3>
                 <span style="display:inline-flex;align-items:center;height:24px;padding:0 8px;font-size:12px;font-weight:500;background:var(--color-warning-bg);color:var(--color-warning);border-radius:5px;">Presencial</span>
               </div>
               <p style="font-size:14px;color:var(--color-text-secondary);margin-bottom:12px;">Consultora XYZ Ltda</p>

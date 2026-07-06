@@ -3,10 +3,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
 <BaseLayout title="ADSOscore - Evaluador de empresas ADS para aprendices del SENA">
-  <header style="position:sticky;top:0;z-index:20;background:rgba(255,255,255,0.86);backdrop-filter:blur(12px);border-bottom:1px solid var(--color-border-secondary);">
+  <header style="position:sticky;top:0;z-index:20;background:var(--color-bg-container);border-bottom:1px solid var(--color-border-secondary);">
     <div class="wrap" style="display:flex;align-items:center;justify-content:space-between;height:64px;gap:24px;">
       <span style="font-weight:600;font-size:18px;letter-spacing:-0.01em;color:var(--color-text);white-space:nowrap;">ADSOscore</span>
-      <nav style="display:flex;gap:28px;align-items:center;color:var(--color-text-secondary);">
+      <nav aria-label="Navegacion principal" style="display:flex;gap:28px;align-items:center;color:var(--color-text-secondary);">
         <a href="#como-funciona" style="color:var(--color-text-secondary);transition:color 0.15s ease;">Como funciona</a>
         <a href="#caracteristicas" style="color:var(--color-text-secondary);transition:color 0.15s ease;">Caracteristicas</a>
       </nav>
@@ -16,7 +16,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     </div>
   </header>
 
-  <main>
+  <main id="main-content">
     <section class="wrap" style="padding-top:clamp(56px, 9vw, 108px);text-align:center;">
       <div style="max-width:860px;margin:0 auto;">
         <span class="kicker">Evaluacion de empresas ADS</span>
@@ -39,7 +39,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:clamp(24px, 4vw, 48px);">
         <div style="display:flex;flex-direction:column;gap:20px;">
           <div style="aspect-ratio:124/108;border:1px solid var(--color-border-secondary);border-radius:10px;background:var(--color-bg-layout);padding:24px;display:flex;align-items:center;justify-content:center;">
-            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="var(--color-primary)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="var(--color-primary)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
           </div>
@@ -53,7 +53,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </div>
         <div style="display:flex;flex-direction:column;gap:20px;">
           <div style="aspect-ratio:124/108;border:1px solid var(--color-border-secondary);border-radius:10px;background:var(--color-bg-layout);padding:24px;display:flex;align-items:center;justify-content:center;">
-            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="var(--color-primary)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="var(--color-primary)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
               <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
             </svg>
           </div>
@@ -67,7 +67,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </div>
         <div style="display:flex;flex-direction:column;gap:20px;">
           <div style="aspect-ratio:124/108;border:1px solid var(--color-border-secondary);border-radius:10px;background:var(--color-bg-layout);padding:24px;display:flex;align-items:center;justify-content:center;">
-            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="var(--color-primary)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="var(--color-primary)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
             </svg>
           </div>
@@ -89,10 +89,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           <h2 style="font-size:clamp(26px, 3.2vw, 38px);letter-spacing:-0.015em;margin-bottom:12px;">Todo lo que necesitas para decidir</h2>
           <p style="color:var(--color-text-secondary);font-size:18px;">Herramientas disenadas para ayudarte a encontrar la mejor empresa de aprendizaje.</p>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:clamp(14px, 1.8vw, 20px);">
+        <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:clamp(12px, 1.8vw, 20px);">
           <div style="background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:32px;box-shadow:0 1px 2px var(--color-fill-quaternary);display:flex;flex-direction:column;">
-            <div style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;background:var(--color-primary-bg);color:var(--color-primary);margin-bottom:20px;">
-              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <div style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;background:var(--color-primary-bg);color:var(--color-primary);margin-bottom:20px;">
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
               </svg>
             </div>
@@ -100,8 +100,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             <p style="color:var(--color-text-secondary);">Cada empresa tiene un score basado en 10 parametros: GitHub, RUES, Glassdoor, ubicacion y mas.</p>
           </div>
           <div style="background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:32px;box-shadow:0 1px 2px var(--color-fill-quaternary);display:flex;flex-direction:column;">
-            <div style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;background:var(--color-primary-bg);color:var(--color-primary);margin-bottom:20px;">
-              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <div style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;background:var(--color-primary-bg);color:var(--color-primary);margin-bottom:20px;">
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
               </svg>
             </div>
@@ -109,8 +109,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             <p style="color:var(--color-text-secondary);">Lee resenas de otros aprendices que ya pasaron por la empresa. Sistema anti-fraude incluido.</p>
           </div>
           <div style="background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:32px;box-shadow:0 1px 2px var(--color-fill-quaternary);display:flex;flex-direction:column;">
-            <div style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;background:var(--color-primary-bg);color:var(--color-primary);margin-bottom:20px;">
-              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <div style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;background:var(--color-primary-bg);color:var(--color-primary);margin-bottom:20px;">
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
               </svg>
             </div>
@@ -122,7 +122,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     </section>
 
     <section class="wrap" style="padding:0 0 clamp(56px, 8vw, 88px);">
-      <div style="border:1px solid var(--color-primary-bg);background:var(--color-primary-bg);border-radius:clamp(14px, 2vw, 20px);padding:clamp(24px, 4vw, 36px) clamp(24px, 5vw, 48px);display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;">
+      <div style="border:1px solid var(--color-primary-bg);background:var(--color-primary-bg);border-radius:10px;padding:clamp(24px, 4vw, 36px) clamp(24px, 5vw, 48px);display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;">
         <div style="min-width:0;">
           <h3 style="font-size:clamp(20px, 2.4vw, 26px);letter-spacing:-0.01em;">Empieza a evaluar empresas hoy</h3>
           <p style="color:var(--color-text-secondary);margin-top:4px;">Gratuito para aprendices del SENA. Sin registro complicado.</p>

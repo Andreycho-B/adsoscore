@@ -1,13 +1,7 @@
 import type { APIRoute } from 'astro';
 import { clearSession } from '../../../lib/auth';
 
-export const GET: APIRoute = async (context) => {
+export const POST: APIRoute = async (context) => {
   clearSession(context);
-
-  return new Response(null, {
-    status: 302,
-    headers: {
-      Location: '/',
-    },
-  });
+  return context.redirect('/');
 };

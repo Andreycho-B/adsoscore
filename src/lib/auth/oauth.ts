@@ -1,4 +1,14 @@
+import { SignJWT, jwtVerify } from 'jose';
 import { prisma } from '../prisma';
+import type { SessionUser } from './session';
+
+function getAuthSecret(): Uint8Array {
+  const secret = import.meta.env.AUTH_SECRET;
+  if (!secret) {
+    throw new Error('AUTH_SECRET environment variable is required');
+  }
+  return new TextEncoder().encode(secret);
+}
 
 export interface OAuthState {
   provider: string;
@@ -6,18 +16,34 @@ export interface OAuthState {
   timestamp: number;
 }
 
-export function generateOAuthState(provider: string): string {
+export async function generateOAuthState(provider: string): Promise<string> {
   const state: OAuthState = {
     provider,
     csrfToken: crypto.randomUUID(),
     timestamp: Date.now(),
   };
-  return Buffer.from(JSON.stringify(state)).toString('base64url');
+  const data = Buffer.from(JSON.stringify(state)).toString('base64url');
+  const signature = await new SignJWT({ data })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setExpirationTime('5m')
+    .sign(getAuthSecret());
+  return `${data}.${signature}`;
 }
 
-export function validateOAuthState(state: string): OAuthState | null {
+export async function validateOAuthState(state: string): Promise<OAuthState | null> {
   try {
-    const decoded = JSON.parse(Buffer.from(state, 'base64url').toString());
+    const parts = state.split('.');
+    if (parts.length < 2) return null;
+
+    const data = parts[0];
+    const signature = parts.slice(1).join('.');
+
+    const secret = getAuthSecret();
+    const { payload } = await jwtVerify(signature, secret);
+
+    if (!payload.data || payload.data !== data) return null;
+
+    const decoded = JSON.parse(Buffer.from(data, 'base64url').toString());
     if (!decoded.provider || !decoded.csrfToken || !decoded.timestamp) return null;
 
     const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
@@ -45,14 +71,6 @@ export function getGitHubAuthURL(state: string): string {
   const redirectUri = `${import.meta.env.PUBLIC_APP_URL}/api/auth/callback/github`;
   const scope = 'read:user user:email';
   return `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&state=${state}`;
-}
-
-export interface SessionUser {
-  id: string;
-  name: string | null;
-  email: string | null;
-  image: string | null;
-  provider: string;
 }
 
 export async function exchangeGoogleCode(code: string): Promise<SessionUser | null> {
@@ -98,20 +116,27 @@ export async function exchangeGoogleCode(code: string): Promise<SessionUser | nu
 
     const userData = await userRes.json();
 
-    const user = await prisma.user.upsert({
-      where: { email: userData.email },
-      create: {
-        email: userData.email,
-        name: userData.name,
-        image: userData.picture,
-        provider: 'google',
-        providerId: userData.id,
-      },
-      update: {
-        name: userData.name,
-        image: userData.picture,
-      },
+    const existingUser = await prisma.user.findUnique({
+      where: { provider_providerId: { provider: 'google', providerId: userData.id } },
     });
+
+    let user;
+    if (existingUser) {
+      user = await prisma.user.update({
+        where: { id: existingUser.id },
+        data: { name: userData.name, image: userData.picture, email: userData.email },
+      });
+    } else {
+      user = await prisma.user.create({
+        data: {
+          email: userData.email,
+          name: userData.name,
+          image: userData.picture,
+          provider: 'google',
+          providerId: userData.id,
+        },
+      });
+    }
 
     return {
       id: user.id,
@@ -186,20 +211,28 @@ export async function exchangeGitHubCode(code: string): Promise<SessionUser | nu
       return null;
     }
 
-    const user = await prisma.user.upsert({
-      where: { email: primaryEmail },
-      create: {
-        email: primaryEmail,
-        name: userData.name || userData.login,
-        image: userData.avatar_url,
-        provider: 'github',
-        providerId: String(userData.id),
-      },
-      update: {
-        name: userData.name || userData.login,
-        image: userData.avatar_url,
-      },
+    const providerId = String(userData.id);
+    const existingUser = await prisma.user.findUnique({
+      where: { provider_providerId: { provider: 'github', providerId } },
     });
+
+    let user;
+    if (existingUser) {
+      user = await prisma.user.update({
+        where: { id: existingUser.id },
+        data: { name: userData.name || userData.login, image: userData.avatar_url, email: primaryEmail },
+      });
+    } else {
+      user = await prisma.user.create({
+        data: {
+          email: primaryEmail,
+          name: userData.name || userData.login,
+          image: userData.avatar_url,
+          provider: 'github',
+          providerId,
+        },
+      });
+    }
 
     return {
       id: user.id,

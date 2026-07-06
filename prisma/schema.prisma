@@ -101,6 +101,8 @@ model Review {
   helpfulVotes  HelpfulVote[]
 
   @@unique([userId, offerId])
+  @@index([userId])
+  @@index([offerId])
   @@index([helpfulCount(sort: Desc)])
 }
 
@@ -118,6 +120,7 @@ model HelpfulVote {
   createdAt     DateTime  @default(now())
 
   @@unique([userId, reviewId])
+  @@index([reviewId])
 }
 
 // Favoritos
@@ -133,6 +136,7 @@ model Favorite {
   createdAt     DateTime  @default(now())
 
   @@unique([userId, offerId])
+  @@index([offerId])
 }
 
 // Tags para empresas
@@ -155,6 +159,7 @@ model OfferTag {
   tag           Tag       @relation(fields: [tagId], references: [id])
 
   @@unique([offerId, tagId])
+  @@index([tagId])
 }
 
 // Notificaciones in-app
@@ -191,6 +196,7 @@ model Report {
   updatedAt     DateTime  @updatedAt
 
   @@index([status])
+  @@index([offerId])
 }
 
 // Consentimiento de usuario (LGPD)

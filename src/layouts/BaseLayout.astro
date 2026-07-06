@@ -5,6 +5,7 @@ interface Props {
 }
 
 const { title, description = 'Evaluador de empresas ADS para aprendices del SENA' } = Astro.props;
+const canonicalURL = Astro.url.href;
 ---
 
 <!DOCTYPE html>
@@ -13,6 +14,14 @@ const { title, description = 'Evaluador de empresas ADS para aprendices del SENA
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
+    <meta property="og:title" content={`${title} | ADSOscore`} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalURL} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={`${title} | ADSOscore`} />
+    <meta name="twitter:description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -20,6 +29,7 @@ const { title, description = 'Evaluador de empresas ADS para aprendices del SENA
     <title>{title} | ADSOscore</title>
   </head>
   <body>
+    <a href="#main-content" class="sr-only">Saltar al contenido</a>
     <slot />
   </body>
 </html>

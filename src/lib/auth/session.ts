@@ -14,7 +14,7 @@ export interface Session {
 }
 
 const COOKIE_NAME = 'session_token';
-const MAX_AGE = 60 * 60 * 24 * 30;
+const MAX_AGE = 60 * 60 * 24 * 7;
 
 function getCookieOptions() {
   return {
@@ -27,11 +27,7 @@ function getCookieOptions() {
 }
 
 export async function getSession(context: APIContext): Promise<Session> {
-  const cookieHeader = context.request.headers.get('cookie') || '';
-  const cookies = Object.fromEntries(
-    cookieHeader.split(';').map(c => c.trim().split('=').map(s => s.trim()))
-  );
-  const token = cookies[COOKIE_NAME];
+  const token = context.cookies.get(COOKIE_NAME)?.value;
 
   if (!token) {
     return { user: null };
@@ -48,7 +44,6 @@ export async function getSession(context: APIContext): Promise<Session> {
 
 export async function setSession(context: APIContext, user: SessionUser): Promise<void> {
   const token = await createJWT({ user });
-
   context.cookies.set(COOKIE_NAME, token, getCookieOptions());
 }
 

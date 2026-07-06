@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 import { generateOAuthState, getGitHubAuthURL } from '../../../../lib/auth/oauth';
 
 export const GET: APIRoute = async ({ cookies }) => {
-  const state = generateOAuthState('github');
+  const state = await generateOAuthState('github');
 
   cookies.set('oauth_state', state, {
     path: '/',
