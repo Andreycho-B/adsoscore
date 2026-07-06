@@ -9,15 +9,14 @@ datasource db {
 // Usuarios
 model User {
   id            String    @id @default(cuid())
-  email         String    @unique
-  name          String?
-  image         String?
-  provider      String    // "google" | "github"
-  providerId    String
+  email         String    @unique @db.VarChar(255)
+  name          String?   @db.VarChar(100)
+  image         String?   @db.VarChar(500)
+  provider      String    @db.VarChar(20) // "google" | "github"
+  providerId    String    @db.VarChar(255)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  // Relaciones
   reviews       Review[]
   favorites     Favorite[]
   notifications Notification[]
@@ -31,24 +30,23 @@ model User {
 // Ofertas de aprendizaje del SGVA
 model Offer {
   id            String    @id @default(cuid())
-  sgvaId        String    @unique // ID original en SGVA
-  titulo        String
-  empresa       String
-  nit           String?
-  descripcion   String?
-  funciones     String?
-  perfil        String?
-  ciudad        String?
-  departamento  String?
-  direccion     String?
-  telefono      String?
-  contacto      String?
-  email         String?
-  modalidad     String?   // "Presencial" | "Remoto" | "Hibrido"
+  sgvaId        String    @unique @db.VarChar(50)
+  titulo        String    @db.VarChar(200)
+  empresa       String    @db.VarChar(200)
+  nit           String?   @db.VarChar(20)
+  descripcion   String?   @db.Text()
+  funciones     String?   @db.Text()
+  perfil        String?   @db.Text()
+  ciudad        String?   @db.VarChar(100)
+  departamento  String?   @db.VarChar(100)
+  direccion     String?   @db.VarChar(300)
+  telefono      String?   @db.VarChar(20)
+  contacto      String?   @db.VarChar(100)
+  email         String?   @db.VarChar(255)
+  modalidad     String?   @db.VarChar(20) // "Presencial" | "Remoto" | "Hibrido"
   fechaPublicacion DateTime?
   fechaCierre   DateTime?
-  
-  // Score
+
   score         Float     @default(0)
   scoreGitHub   Float     @default(0)
   scoreFunciones Float    @default(0)
@@ -59,21 +57,18 @@ model Offer {
   scoreLinkedIn Float     @default(0)
   scoreTamano   Float     @default(0)
   scoreAntiguedad Float   @default(0)
-  
-  // Metadatos de enriquecimiento
+
   ruesData      Json?
   githubData    Json?
   linkedinData  Json?
   glassdoorData Json?
-  
-  // Estado
+
   isActive      Boolean   @default(true)
   isVisible     Boolean   @default(true)
-  
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  // Relaciones
   reviews       Review[]
   favorites     Favorite[]
   tags          OfferTag[]
@@ -86,24 +81,23 @@ model Offer {
   @@index([isActive])
 }
 
-// Reseñas de usuarios
+// Resenas de usuarios
 model Review {
   id            String    @id @default(cuid())
-  content       String
+  content       String    @db.Text()
   rating        Int       // 1-5
   helpfulCount  Int       @default(0)
   notHelpfulCount Int     @default(0)
-  
+
   userId        String
   user          User      @relation(fields: [userId], references: [id])
-  
+
   offerId       String
   offer         Offer     @relation(fields: [offerId], references: [id])
-  
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  // Relaciones
   helpfulVotes  HelpfulVote[]
 
   @@unique([userId, offerId])
@@ -113,14 +107,14 @@ model Review {
 // Votos de utilidad
 model HelpfulVote {
   id            String    @id @default(cuid())
-  isHelpful     Boolean   // true = util, false = no util
-  
+  isHelpful     Boolean
+
   userId        String
   user          User      @relation(fields: [userId], references: [id])
-  
+
   reviewId      String
   review        Review    @relation(fields: [reviewId], references: [id])
-  
+
   createdAt     DateTime  @default(now())
 
   @@unique([userId, reviewId])
@@ -129,13 +123,13 @@ model HelpfulVote {
 // Favoritos
 model Favorite {
   id            String    @id @default(cuid())
-  
+
   userId        String
   user          User      @relation(fields: [userId], references: [id])
-  
+
   offerId       String
   offer         Offer     @relation(fields: [offerId], references: [id])
-  
+
   createdAt     DateTime  @default(now())
 
   @@unique([userId, offerId])
@@ -144,19 +138,19 @@ model Favorite {
 // Tags para empresas
 model Tag {
   id            String    @id @default(cuid())
-  name          String    @unique
-  slug          String    @unique
-  
+  name          String    @unique @db.VarChar(50)
+  slug          String    @unique @db.VarChar(50)
+
   offers        OfferTag[]
 }
 
-// Relacion-offers-tags
+// Relacion offers-tags
 model OfferTag {
   id            String    @id @default(cuid())
-  
+
   offerId       String
   offer         Offer     @relation(fields: [offerId], references: [id])
-  
+
   tagId         String
   tag           Tag       @relation(fields: [tagId], references: [id])
 
@@ -166,15 +160,15 @@ model OfferTag {
 // Notificaciones in-app
 model Notification {
   id            String    @id @default(cuid())
-  title         String
-  message       String
-  type          String    // "new_offer" | "review_update" | "system"
+  title         String    @db.VarChar(200)
+  message       String    @db.Text()
+  type          String    @db.VarChar(30) // "new_offer" | "review_update" | "system"
   isRead        Boolean   @default(false)
-  link          String?
-  
+  link          String?   @db.VarChar(500)
+
   userId        String
   user          User      @relation(fields: [userId], references: [id])
-  
+
   createdAt     DateTime  @default(now())
 
   @@index([userId, isRead])
@@ -183,16 +177,16 @@ model Notification {
 // Reportes de ofertas
 model Report {
   id            String    @id @default(cuid())
-  reason        String    // "no_existe" | "empresa_falsa" | "info_incorrecta" | "otro"
-  description   String?
-  status        String    @default("pending") // "pending" | "reviewed" | "resolved"
-  
+  reason        String    @db.VarChar(30) // "no_existe" | "empresa_falsa" | "info_incorrecta" | "otro"
+  description   String?   @db.Text()
+  status        String    @default("pending") @db.VarChar(20) // "pending" | "reviewed" | "resolved"
+
   userId        String
   user          User      @relation(fields: [userId], references: [id])
-  
+
   offerId       String
   offer         Offer     @relation(fields: [offerId], references: [id])
-  
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -202,13 +196,13 @@ model Report {
 // Consentimiento de usuario (LGPD)
 model Consent {
   id            String    @id @default(cuid())
-  consentType   String    // "marketing" | "reviews" | "analytics"
+  consentType   String    @db.VarChar(30) // "marketing" | "reviews" | "analytics"
   granted       Boolean
   grantedAt     DateTime  @default(now())
   revokedAt     DateTime?
-  ipAddress     String?
-  userAgent     String?
-  
+  ipAddress     String?   @db.VarChar(45) // IPv6 max
+  userAgent     String?   @db.VarChar(500)
+
   userId        String
   user          User      @relation(fields: [userId], references: [id])
 
@@ -218,9 +212,9 @@ model Consent {
 // Configuracion del sistema
 model SystemConfig {
   id            String    @id @default(cuid())
-  key           String    @unique
-  value         String
-  description   String?
-  
+  key           String    @unique @db.VarChar(100)
+  value         String    @db.Text()
+  description   String?   @db.VarChar(500)
+
   updatedAt     DateTime  @updatedAt
 }

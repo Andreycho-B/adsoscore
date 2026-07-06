@@ -135,6 +135,7 @@ export async function exchangeGoogleCode(code: string): Promise<SessionUser | nu
         name: userData.name,
         image: userData.picture,
         provider: 'google',
+        providerId: userData.id,
       },
       update: {
         name: userData.name,
@@ -189,6 +190,7 @@ export async function exchangeGitHubCode(code: string): Promise<SessionUser | nu
         name: userData.name || userData.login,
         image: userData.avatar_url,
         provider: 'github',
+        providerId: String(userData.id),
       },
       update: {
         name: userData.name || userData.login,
