@@ -22,6 +22,8 @@ const canonicalURL = Astro.url.href;
     <meta name="twitter:title" content={`${title} | ADSOscore`} />
     <meta name="twitter:description" content={description} />
     <link rel="canonical" href={canonicalURL} />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#1E3A5F" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -31,6 +33,11 @@ const canonicalURL = Astro.url.href;
   <body>
     <a href="#main-content" class="sr-only">Saltar al contenido</a>
     <slot />
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js');
+      }
+    </script>
   </body>
 </html>
 
