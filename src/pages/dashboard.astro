@@ -1,7 +1,13 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { prisma } from '../lib/prisma';
+import { getSession } from '../lib/auth';
 import { getScoreLabel, getScoreColor } from '../lib/scoring';
+
+const session = await getSession(Astro);
+if (!session.user) {
+  return Astro.redirect('/login');
+}
 
 const url = new URL(Astro.request.url);
 const departamento = url.searchParams.get('departamento') || '';
