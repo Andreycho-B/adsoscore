@@ -1,9 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "astro",
-  "buildCommand": "node ./node_modules/astro/bin/astro.mjs build",
-  "outputDirectory": "dist",
-  "installCommand": "npm install && npx prisma generate",
+  "installCommand": "npm install && node ./node_modules/prisma/build/index.js generate",
   "env": {
     "AUTH_SECRET": "@auth-secret",
     "GOOGLE_CLIENT_ID": "@google-client-id",
