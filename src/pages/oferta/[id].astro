@@ -143,16 +143,16 @@ const subScores = [
                     </span>
                   )}
                   {offer.modalidad && (
-                    <span style="display:inline-flex;align-items:center;height:24px;padding:0 10px;font-size:12px;font-weight:500;background:var(--color-fill-secondary);color:{getModalidadColor(offer.modalidad)};border-radius:5px;">
+                    <span style={`display:inline-flex;align-items:center;height:24px;padding:0 10px;font-size:12px;font-weight:500;background:var(--color-fill-secondary);color:${getModalidadColor(offer.modalidad)};border-radius:5px;`}>
                       {offer.modalidad}
                     </span>
                   )}
                 </div>
               </div>
               <div style="display:flex;flex-direction:column;align-items:flex-end;min-width:80px;">
-                <div style="font-size:36px;font-weight:700;color:{scoreColor};line-height:1;">{Math.round(offer.score)}</div>
+                <div style={`font-size:36px;font-weight:700;color:${scoreColor};line-height:1;`}>{Math.round(offer.score)}</div>
                 <div style="font-size:12px;color:var(--color-text-tertiary);margin-top:2px;">/ 100</div>
-                <div style="font-size:12px;font-weight:600;color:{scoreColor};margin-top:4px;">{scoreLabel}</div>
+                <div style={`font-size:12px;font-weight:600;color:${scoreColor};margin-top:4px;`}>{scoreLabel}</div>
               </div>
             </div>
           </div>
@@ -167,7 +167,7 @@ const subScores = [
                   <div style="display:grid;grid-template-columns:120px 1fr 48px;align-items:center;gap:12px;">
                     <span style="font-size:13px;color:var(--color-text-secondary);font-weight:500;">{s.label}</span>
                     <div style="height:6px;background:var(--color-fill-secondary);border-radius:3px;overflow:hidden;">
-                      <div style="height:100%;width:{pct}%;background:{barColor};border-radius:3px;transition:width 0.3s ease;"></div>
+                      <div style={`height:100%;width:${pct}%;background:${barColor};border-radius:3px;transition:width 0.3s ease;`}></div>
                     </div>
                     <span style="font-size:13px;font-weight:500;color:var(--color-text);text-align:right;">{s.value}<span style="color:var(--color-text-tertiary);">/{s.max}</span></span>
                   </div>
@@ -176,7 +176,7 @@ const subScores = [
             </div>
             <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--color-border-secondary);display:flex;justify-content:space-between;align-items:center;">
               <span style="font-size:13px;font-weight:600;color:var(--color-text);">Puntaje total</span>
-              <span style="font-size:18px;font-weight:700;color:{scoreColor};">{Math.round(offer.score)} / 100</span>
+              <span style={`font-size:18px;font-weight:700;color:${scoreColor};`}>{Math.round(offer.score)} / 100</span>
             </div>
           </div>
 
@@ -325,7 +325,7 @@ const subScores = [
 
             <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--color-border-secondary);display:flex;flex-direction:column;gap:10px;">
               <button id="favorite-btn" data-offer-id={id} style="width:100%;height:40px;font-size:14px;font-weight:500;color:#fff;background:var(--color-primary);border:none;border-radius:8px;cursor:pointer;transition:opacity 0.15s ease;display:flex;align-items:center;justify-content:center;gap:6px;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
-                <span id="favorite-icon" style="font-size:16px;color:{isFavorited ? 'var(--color-warning)' : 'inherit'};">{isFavorited ? '\u2605' : '\u2606'}</span>
+                <span id="favorite-icon" style={`font-size:16px;color:${isFavorited ? 'var(--color-warning)' : 'inherit'};`}>{isFavorited ? '\u2605' : '\u2606'}</span>
                 <span id="favorite-text">{isFavorited ? 'Quitar de favoritos' : 'Guardar en favoritos'}</span>
               </button>
               <button style="width:100%;height:40px;font-size:14px;font-weight:500;color:var(--color-text-secondary);background:var(--color-fill-secondary);border:1px solid var(--color-border);border-radius:8px;cursor:pointer;transition:background 0.15s ease;" onmouseover="this.style.background='var(--color-fill-tertiary)'" onmouseout="this.style.background='var(--color-fill-secondary)'">Reportar oferta</button>
