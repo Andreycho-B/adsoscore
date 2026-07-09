@@ -1,0 +1,563 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { prisma } from '../lib/prisma';
+import { getSession } from '../lib/auth';
+
+const session = await getSession(Astro);
+if (!session.user) {
+  return Astro.redirect('/login');
+}
+
+const adminConfig = await prisma.systemConfig.findUnique({ where: { key: 'adminEmail' } });
+const isAdmin = session.user.email === adminConfig?.value || session.user.email === 'admin@adsoscore.dev';
+
+if (!isAdmin) {
+  return Astro.redirect('/dashboard');
+}
+
+const stats = {
+  totalOffers: await prisma.offer.count({ where: { isActive: true } }),
+  totalUsers: await prisma.user.count(),
+  totalReviews: await prisma.review.count(),
+  totalFavorites: await prisma.favorite.count(),
+  pendingReports: await prisma.report.count({ where: { status: 'pending' } }),
+};
+
+const reportedOffers = await prisma.report.findMany({
+  where: { status: 'pending' },
+  include: { offer: { select: { id: true, titulo: true, empresa: true } }, user: { select: { email: true } } },
+  orderBy: { createdAt: 'desc' },
+  take: 20,
+});
+
+const recentReviews = await prisma.review.findMany({
+  include: {
+    offer: { select: { titulo: true } },
+    user: { select: { email: true, name: true } },
+  },
+  orderBy: { createdAt: 'desc' },
+  take: 10,
+});
+
+const configEntries = await prisma.systemConfig.findMany({
+  orderBy: { key: 'asc' },
+});
+
+const maintenanceMode = configEntries.find((c) => c.key === 'maintenanceMode');
+---
+
+<BaseLayout title="Panel de Administracion">
+  <div style="min-height:100vh;background:var(--color-bg-layout);">
+    <header style="background:var(--color-bg-container);border-bottom:1px solid var(--color-border);position:sticky;top:0;z-index:40;">
+      <div class="wrap" style="display:flex;justify-content:space-between;align-items:center;height:64px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <a href="/" style="font-weight:600;font-size:18px;letter-spacing:-0.01em;color:var(--color-primary);text-decoration:none;">ADSOscore</a>
+          <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--color-text-tertiary);border:1px solid var(--color-border);border-radius:var(--radius-xs);padding:2px 6px;">Admin</span>
+        </div>
+        <nav style="display:flex;gap:28px;align-items:center;">
+          <a href="/dashboard" style="font-size:14px;font-weight:500;color:var(--color-text-secondary);text-decoration:none;">Ofertas</a>
+          <a href="/admin" style="font-size:14px;font-weight:600;color:var(--color-primary);text-decoration:none;">Panel</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="wrap" id="main-content" style="padding-top:32px;padding-bottom:48px;">
+      <h1 style="font-size:28px;margin-bottom:24px;">Panel de Administracion</h1>
+
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-label">Total ofertas</span>
+          <span class="stat-value">{stats.totalOffers}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Total usuarios</span>
+          <span class="stat-value">{stats.totalUsers}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Total resenas</span>
+          <span class="stat-value">{stats.totalReviews}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Total favoritos</span>
+          <span class="stat-value">{stats.totalFavorites}</span>
+        </div>
+        <div class="stat-card stat-card--alert">
+          <span class="stat-label">Reportes pendientes</span>
+          <span class="stat-value">{stats.pendingReports}</span>
+        </div>
+      </div>
+
+      <!-- Reported Offers -->
+      <section class="admin-section">
+        <h2 class="section-title">Ofertas reportadas</h2>
+        {reportedOffers.length === 0 ? (
+          <p class="empty-text">No hay reportes pendientes</p>
+        ) : (
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Oferta</th>
+                  <th>Empresa</th>
+                  <th>Reportado por</th>
+                  <th>Motivo</th>
+                  <th>Fecha</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reportedOffers.map((report) => (
+                  <tr>
+                    <td><a href={`/oferta/${report.offer.id}`}>{report.offer.titulo}</a></td>
+                    <td>{report.offer.empresa}</td>
+                    <td>{report.user.email}</td>
+                    <td><span class="reason-badge">{report.reason}</span></td>
+                    <td>{new Date(report.createdAt).toLocaleDateString('es-CO')}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <!-- Recent Reviews -->
+      <section class="admin-section">
+        <h2 class="section-title">Resenas recientes</h2>
+        {recentReviews.length === 0 ? (
+          <p class="empty-text">No hay resenas aun</p>
+        ) : (
+          <div class="reviews-list">
+            {recentReviews.map((review) => (
+              <div class="review-card">
+                <div class="review-header">
+                  <span class="review-user">{review.user.name || review.user.email}</span>
+                  <span class="review-rating">{Array(review.rating).fill('*').join('')}{' '.repeat(5 - review.rating)}</span>
+                  <span class="review-date">{new Date(review.createdAt).toLocaleDateString('es-CO')}</span>
+                </div>
+                <p class="review-offer">en {review.offer.titulo}</p>
+                <p class="review-content">{review.content}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <!-- Enrichment -->
+      <section class="admin-section">
+        <h2 class="section-title">Enriquecimiento masivo</h2>
+        <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:16px;">
+          Ejecuta enriquecimiento RUES y GitHub para todas las ofertas activas. Se procesan en lotes de 10.
+        </p>
+        <div style="display:flex;gap:12px;">
+          <button id="btn-enrich-rues" class="btn-secondary btn-sm">Ejecutar RUES batch</button>
+          <button id="btn-enrich-github" class="btn-secondary btn-sm">Ejecutar GitHub batch</button>
+        </div>
+        <div id="enrich-status" style="margin-top:12px;font-size:13px;color:var(--color-text-secondary);display:none;"></div>
+      </section>
+
+      <!-- Maintenance Mode -->
+      <section class="admin-section">
+        <h2 class="section-title">Modo mantenimiento</h2>
+        <form id="maintenance-form" style="display:flex;align-items:center;gap:16px;">
+          <label class="toggle">
+            <input type="checkbox" id="maintenance-toggle" checked={maintenanceMode?.value === 'true'} />
+            <span class="toggle-slider"></span>
+          </label>
+          <span id="maintenance-label" style="font-size:13px;color:var(--color-text-secondary);">
+            {maintenanceMode?.value === 'true' ? 'Activo' : 'Inactivo'}
+          </span>
+        </form>
+      </section>
+
+      <!-- System Config -->
+      <section class="admin-section">
+        <h2 class="section-title">Configuracion del sistema</h2>
+        <div class="table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Clave</th>
+                <th>Valor</th>
+                <th>Descripcion</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {configEntries.map((entry) => (
+                <tr data-config-key={entry.key}>
+                  <td><code class="config-key">{entry.key}</code></td>
+                  <td>
+                    <input
+                      type="text"
+                      class="config-input"
+                      value={entry.value}
+                      data-original={entry.value}
+                    />
+                  </td>
+                  <td style="color:var(--color-text-tertiary);font-size:13px;">{entry.description || '-'}</td>
+                  <td>
+                    <button class="btn-save-config btn-link">Guardar</button>
+                  </td>
+                </tr>
+              ))}
+              {configEntries.length === 0 && (
+                <tr><td colspan="4" style="text-align:center;color:var(--color-text-tertiary);padding:24px;">No hay entradas de configuracion</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+</BaseLayout>
+
+<style>
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: var(--color-bg-container);
+    border: 1px solid var(--color-border-secondary);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    box-shadow: var(--shadow-xs);
+  }
+
+  .stat-card--alert {
+    border-color: var(--color-warning);
+    background: var(--color-warning-bg);
+  }
+
+  .stat-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-text-secondary);
+  }
+
+  .stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--color-text);
+    letter-spacing: -0.025em;
+  }
+
+  .admin-section {
+    background: var(--color-bg-container);
+    border: 1px solid var(--color-border-secondary);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-xs);
+  }
+
+  .section-title {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-primary);
+    margin-bottom: 16px;
+  }
+
+  .empty-text {
+    font-size: 14px;
+    color: var(--color-text-tertiary);
+    text-align: center;
+    padding: 24px;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+  }
+
+  .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .admin-table th {
+    text-align: left;
+    padding: 8px 12px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    border-bottom: 1px solid var(--color-border);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .admin-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--color-border-secondary);
+    color: var(--color-text);
+  }
+
+  .admin-table a {
+    color: var(--color-link);
+    text-decoration: none;
+  }
+
+  .admin-table a:hover {
+    color: var(--color-link-hover);
+  }
+
+  .reason-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    background: var(--color-error-bg);
+    color: var(--color-error);
+  }
+
+  .reviews-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .review-card {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--color-border-secondary);
+  }
+
+  .review-card:last-child {
+    border-bottom: none;
+  }
+
+  .review-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+
+  .review-user {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  .review-rating {
+    font-size: 12px;
+    color: var(--color-warning);
+    letter-spacing: 1px;
+  }
+
+  .review-date {
+    font-size: 12px;
+    color: var(--color-text-tertiary);
+    margin-left: auto;
+  }
+
+  .review-offer {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    margin-bottom: 6px;
+  }
+
+  .review-content {
+    font-size: 13px;
+    color: var(--color-text);
+    line-height: 1.5;
+  }
+
+  .btn-sm {
+    height: 32px;
+    padding: 0 16px;
+    font-size: 13px;
+  }
+
+  .toggle {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 22px;
+    cursor: pointer;
+  }
+
+  .toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: var(--color-fill);
+    border-radius: 11px;
+    transition: background 0.2s;
+  }
+
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 2px;
+    bottom: 2px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+  }
+
+  .toggle input:checked + .toggle-slider {
+    background: var(--color-primary);
+  }
+
+  .toggle input:checked + .toggle-slider::before {
+    transform: translateX(18px);
+  }
+
+  .config-key {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: var(--color-fill-tertiary);
+    padding: 2px 6px;
+    border-radius: var(--radius-xs);
+  }
+
+  .config-input {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--color-text);
+    background: var(--color-bg-container);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 4px 8px;
+    width: 100%;
+    max-width: 320px;
+    box-sizing: border-box;
+  }
+
+  .btn-link {
+    background: none;
+    border: none;
+    color: var(--color-primary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0;
+    font-family: var(--font-sans);
+  }
+
+  .btn-link:hover {
+    color: var(--color-primary-dark);
+  }
+
+  @media (max-width: 768px) {
+    .stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .stats-grid > :last-child {
+      grid-column: span 2;
+    }
+  }
+</style>
+
+<script>
+  function getCsrfToken(): string {
+    return document.cookie
+      .split('; ')
+      .find((row) => row.startsWith('csrf_token='))
+      ?.split('=')[1] || '';
+  }
+
+  async function enrichBatch(endpoint: string) {
+    const statusEl = document.getElementById('enrich-status')!;
+    statusEl.style.display = 'block';
+    statusEl.textContent = 'Obteniendo ofertas...';
+
+    try {
+      const offersRes = await fetch('/api/offers');
+      const offersData = await offersRes.json();
+      const offerIds = (offersData.offers || offersData || []).map((o: { id: string }) => o.id);
+
+      if (offerIds.length === 0) {
+        statusEl.textContent = 'No hay ofertas para procesar.';
+        return;
+      }
+
+      statusEl.textContent = `Procesando ${offerIds.length} ofertas en lotes de 10...`;
+
+      for (let i = 0; i < offerIds.length; i += 10) {
+        const batch = offerIds.slice(i, i + 10);
+        statusEl.textContent = `Lote ${Math.floor(i / 10) + 1}/${Math.ceil(offerIds.length / 10)}...`;
+
+        await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ offerIds: batch }),
+        });
+      }
+
+      statusEl.textContent = `Completado. ${offerIds.length} ofertas procesadas.`;
+    } catch {
+      statusEl.textContent = 'Error al procesar. Intente de nuevo.';
+    }
+  }
+
+  document.getElementById('btn-enrich-rues')?.addEventListener('click', () => {
+    enrichBatch('/api/enrich/rues-batch');
+  });
+
+  document.getElementById('btn-enrich-github')?.addEventListener('click', () => {
+    enrichBatch('/api/enrich/github-batch');
+  });
+
+  document.getElementById('maintenance-toggle')?.addEventListener('change', async (e) => {
+    const target = e.target as HTMLInputElement;
+    const value = target.checked ? 'true' : 'false';
+    const label = document.getElementById('maintenance-label')!;
+
+    try {
+      await fetch('/api/admin/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'maintenanceMode', value }),
+      });
+      label.textContent = target.checked ? 'Activo' : 'Inactivo';
+    } catch {
+      target.checked = !target.checked;
+      label.textContent = target.checked ? 'Activo' : 'Inactivo';
+    }
+  });
+
+  document.querySelectorAll('.btn-save-config').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      const target = e.target as HTMLButtonElement;
+      const row = target.closest('tr')!;
+      const key = row.dataset.configKey!;
+      const input = row.querySelector('.config-input') as HTMLInputElement;
+      const value = input.value;
+
+      try {
+        const res = await fetch('/api/admin/config', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key, value }),
+        });
+
+        if (res.ok) {
+          target.textContent = 'Guardado';
+          setTimeout(() => { target.textContent = 'Guardar'; }, 1500);
+        }
+      } catch {
+        input.value = input.dataset.original || value;
+      }
+    });
+  });
+</script>

@@ -1,5 +1,45 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { prisma } from '../lib/prisma';
+import { getSession } from '../lib/auth';
+import { getScoreLabel, getScoreColor } from '../lib/scoring';
+
+const session = await getSession(Astro);
+if (!session.user) {
+  return Astro.redirect('/login');
+}
+
+const url = new URL(Astro.request.url);
+const departamento = url.searchParams.get('departamento') || '';
+const ciudad = url.searchParams.get('ciudad') || '';
+const modalidad = url.searchParams.get('modalidad') || '';
+const tipoEmpresa = url.searchParams.get('tipoEmpresa') || '';
+
+const where: any = {
+  isActive: true,
+  isVisible: true,
+};
+
+if (departamento) where.departamento = departamento;
+if (ciudad) where.ciudad = ciudad;
+if (modalidad) where.modalidad = modalidad;
+
+const offers = await prisma.offer.findMany({
+  where,
+  orderBy: { score: 'desc' },
+  take: 50,
+});
+
+function buildFilterUrl(params: Record<string, string>) {
+  const searchParams = new URLSearchParams();
+  if (params.departamento) searchParams.set('departamento', params.departamento);
+  if (params.ciudad) searchParams.set('ciudad', params.ciudad);
+  if (params.modalidad) searchParams.set('modalidad', params.modalidad);
+  if (params.tipoEmpresa) searchParams.set('tipoEmpresa', params.tipoEmpresa);
+  const qs = searchParams.toString();
+  return `/dashboard${qs ? '?' + qs : ''}`;
+}
+
 ---
 
 <BaseLayout title="Dashboard">
@@ -22,108 +62,129 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
     <main class="wrap" id="main-content" style="padding-top:32px;padding-bottom:48px;">
       <h1 class="sr-only">Dashboard de ofertas</h1>
+
       <div style="background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:20px;margin-bottom:24px;">
         <p style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;color:var(--color-primary);margin-bottom:16px;">Filtros</p>
         <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:16px;">
           <div>
             <label for="departamento" style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px;font-size:12px;font-weight:600;color:var(--color-text);">Departamento</label>
-            <select id="departamento" style="box-sizing:border-box;width:100%;font-family:var(--font-sans);font-size:14px;color:var(--color-text);background:var(--color-bg-container);border:1px solid var(--color-border);border-radius:8px;outline:none;height:32px;padding:0 12px;">
+            <select
+              id="departamento"
+              style="box-sizing:border-box;width:100%;font-family:var(--font-sans);font-size:14px;color:var(--color-text);background:var(--color-bg-container);border:1px solid var(--color-border);border-radius:8px;outline:none;height:32px;padding:0 12px;"
+              onchange={`window.location='${buildFilterUrl({ departamento: '__VAL__', ciudad, modalidad, tipoEmpresa })}'.replace('__VAL__', this.value)`}
+            >
               <option value="">Todos</option>
-              <option value="Caldas">Caldas</option>
-              <option value="Risaralda">Risaralda</option>
-              <option value="Antioquia">Antioquia</option>
-              <option value="Cundinamarca">Cundinamarca</option>
-              <option value="Santander">Santander</option>
+              <option value="Caldas" selected={departamento === 'Caldas'}>Caldas</option>
+              <option value="Risaralda" selected={departamento === 'Risaralda'}>Risaralda</option>
+              <option value="Antioquia" selected={departamento === 'Antioquia'}>Antioquia</option>
+              <option value="Cundinamarca" selected={departamento === 'Cundinamarca'}>Cundinamarca</option>
+              <option value="Santander" selected={departamento === 'Santander'}>Santander</option>
             </select>
           </div>
           <div>
             <label for="ciudad" style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px;font-size:12px;font-weight:600;color:var(--color-text);">Ciudad</label>
-            <select id="ciudad" style="box-sizing:border-box;width:100%;font-family:var(--font-sans);font-size:14px;color:var(--color-text);background:var(--color-bg-container);border:1px solid var(--color-border);border-radius:8px;outline:none;height:32px;padding:0 12px;">
+            <select
+              id="ciudad"
+              style="box-sizing:border-box;width:100%;font-family:var(--font-sans);font-size:14px;color:var(--color-text);background:var(--color-bg-container);border:1px solid var(--color-border);border-radius:8px;outline:none;height:32px;padding:0 12px;"
+              onchange={`window.location='${buildFilterUrl({ departamento, ciudad: '__VAL__', modalidad, tipoEmpresa })}'.replace('__VAL__', this.value)`}
+            >
               <option value="">Todas</option>
-              <option value="Manizales">Manizales</option>
-              <option value="Pereira">Pereira</option>
-              <option value="Medellin">Medellin</option>
-              <option value="Bogota">Bogota</option>
-              <option value="Bucaramanga">Bucaramanga</option>
+              <option value="Manizales" selected={ciudad === 'Manizales'}>Manizales</option>
+              <option value="Pereira" selected={ciudad === 'Pereira'}>Pereira</option>
+              <option value="Medellin" selected={ciudad === 'Medellin'}>Medellin</option>
+              <option value="Bogota" selected={ciudad === 'Bogota'}>Bogota</option>
+              <option value="Bucaramanga" selected={ciudad === 'Bucaramanga'}>Bucaramanga</option>
             </select>
           </div>
           <div>
             <label for="modalidad" style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px;font-size:12px;font-weight:600;color:var(--color-text);">Modalidad</label>
-            <select id="modalidad" style="box-sizing:border-box;width:100%;font-family:var(--font-sans);font-size:14px;color:var(--color-text);background:var(--color-bg-container);border:1px solid var(--color-border);border-radius:8px;outline:none;height:32px;padding:0 12px;">
+            <select
+              id="modalidad"
+              style="box-sizing:border-box;width:100%;font-family:var(--font-sans);font-size:14px;color:var(--color-text);background:var(--color-bg-container);border:1px solid var(--color-border);border-radius:8px;outline:none;height:32px;padding:0 12px;"
+              onchange={`window.location='${buildFilterUrl({ departamento, ciudad, modalidad: '__VAL__', tipoEmpresa })}'.replace('__VAL__', this.value)`}
+            >
               <option value="">Todas</option>
-              <option value="Remoto">Remoto</option>
-              <option value="Presencial">Presencial</option>
-              <option value="Hibrido">Hibrido</option>
+              <option value="Remoto" selected={modalidad === 'Remoto'}>Remoto</option>
+              <option value="Presencial" selected={modalidad === 'Presencial'}>Presencial</option>
+              <option value="Hibrido" selected={modalidad === 'Hibrido'}>Hibrido</option>
             </select>
           </div>
           <div>
             <label for="tipo-empresa" style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px;font-size:12px;font-weight:600;color:var(--color-text);">Tipo de empresa</label>
-            <select id="tipo-empresa" style="box-sizing:border-box;width:100%;font-family:var(--font-sans);font-size:14px;color:var(--color-text);background:var(--color-bg-container);border:1px solid var(--color-border);border-radius:8px;outline:none;height:32px;padding:0 12px;">
+            <select
+              id="tipo-empresa"
+              style="box-sizing:border-box;width:100%;font-family:var(--font-sans);font-size:14px;color:var(--color-text);background:var(--color-bg-container);border:1px solid var(--color-border);border-radius:8px;outline:none;height:32px;padding:0 12px;"
+              onchange={`window.location='${buildFilterUrl({ departamento, ciudad, modalidad, tipoEmpresa: '__VAL__' })}'.replace('__VAL__', this.value)`}
+            >
               <option value="">Todas</option>
-              <option value="startup">Startup</option>
-              <option value="consultora">Consultora</option>
-              <option value="enterprise">Enterprise</option>
-              <option value="fintech">Fintech</option>
+              <option value="startup" selected={tipoEmpresa === 'startup'}>Startup</option>
+              <option value="consultora" selected={tipoEmpresa === 'consultora'}>Consultora</option>
+              <option value="enterprise" selected={tipoEmpresa === 'enterprise'}>Enterprise</option>
+              <option value="fintech" selected={tipoEmpresa === 'fintech'}>Fintech</option>
             </select>
           </div>
         </div>
       </div>
 
-      <div style="display:flex;flex-direction:column;gap:16px;">
-        <div style="background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:24px;box-shadow:0 1px 2px var(--color-fill-quaternary);">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;">
-            <div style="flex:1;">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                <h3 style="font-size:22px;font-weight:600;color:var(--color-text);">Desarrollador Full Stack</h3>
-                <span style="display:inline-flex;align-items:center;height:24px;padding:0 8px;font-size:12px;font-weight:500;background:var(--color-success-bg);color:var(--color-success);border-radius:5px;">Remoto</span>
-              </div>
-              <p style="font-size:14px;color:var(--color-text-secondary);margin-bottom:12px;">Tech Solutions S.A.S</p>
-              <div style="display:flex;align-items:center;gap:16px;font-size:12px;color:var(--color-text-tertiary);">
-                <span>Bogota, Cundinamarca</span>
-                <span>Publicada hace 2 dias</span>
-              </div>
-            </div>
-            <div style="display:flex;flex-direction:column;align-items:flex-end;">
-              <div style="display:flex;align-items:baseline;gap:4px;">
-                <span style="font-size:24px;font-weight:600;color:var(--color-success);">85</span>
-                <span style="font-size:12px;color:var(--color-text-tertiary);">/100</span>
-              </div>
-              <span style="font-size:12px;font-weight:500;color:var(--color-success);">Excelente</span>
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:16px;border-top:1px solid var(--color-border-secondary);">
-            <button style="font-size:14px;font-weight:500;color:var(--color-text-secondary);background:none;border:none;cursor:pointer;padding:0;transition:color 0.15s ease;">Ver detalles</button>
-            <button style="font-size:14px;font-weight:500;color:var(--color-text-secondary);background:none;border:none;cursor:pointer;padding:0;transition:color 0.15s ease;">Guardar</button>
-          </div>
+      {offers.length === 0 ? (
+        <div style="background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:48px 24px;text-align:center;">
+          <p style="font-size:16px;color:var(--color-text-secondary);">No se encontraron ofertas</p>
         </div>
-
-        <div style="background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:24px;box-shadow:0 1px 2px var(--color-fill-quaternary);">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;">
-            <div style="flex:1;">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                <h3 style="font-size:22px;font-weight:600;color:var(--color-text);">Practicante de Desarrollo</h3>
-                <span style="display:inline-flex;align-items:center;height:24px;padding:0 8px;font-size:12px;font-weight:500;background:var(--color-warning-bg);color:var(--color-warning);border-radius:5px;">Presencial</span>
+      ) : (
+        <div style="display:grid;grid-template-columns:repeat(2, 1fr);gap:16px;">
+          {offers.map((offer) => {
+            const scoreColor = getScoreColor(offer.score);
+            const scoreLabel = getScoreLabel(offer.score);
+            return (
+              <div style="background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:24px;box-shadow:0 1px 2px var(--color-fill-quaternary);">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+                  <div style="flex:1;">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                      <h3 style="font-size:22px;font-weight:600;color:var(--color-text);">{offer.titulo}</h3>
+                      <span style={`display:inline-flex;align-items:center;height:24px;padding:0 8px;font-size:12px;font-weight:500;border-radius:5px;${offer.modalidad === 'Remoto' ? 'background:var(--color-success-bg);color:var(--color-success);' : offer.modalidad === 'Hibrido' ? 'background:var(--color-warning-bg);color:var(--color-warning);' : 'background:var(--color-primary-bg);color:var(--color-primary);'}`}>
+                        {offer.modalidad}
+                      </span>
+                    </div>
+                    <p style="font-size:14px;color:var(--color-text-secondary);margin-bottom:12px;">{offer.empresa}</p>
+                    <div style="display:flex;align-items:center;gap:16px;font-size:12px;color:var(--color-text-tertiary);">
+                      <span>{offer.ciudad}{offer.departamento ? `, ${offer.departamento}` : ''}</span>
+                      {offer.fechaPublicacion && (
+                        <span>Publicada hace {Math.floor((Date.now() - new Date(offer.fechaPublicacion).getTime()) / (1000 * 60 * 60 * 24))} dias</span>
+                      )}
+                    </div>
+                  </div>
+                  <div style="display:flex;flex-direction:column;align-items:flex-end;">
+                    <div style="display:flex;align-items:baseline;gap:4px;">
+                      <span style={`font-size:24px;font-weight:600;color:${scoreColor};`}>{Math.round(offer.score)}</span>
+                      <span style="font-size:12px;color:var(--color-text-tertiary);">/100</span>
+                    </div>
+                    <span style={`font-size:12px;font-weight:500;color:${scoreColor};`}>{scoreLabel}</span>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:16px;border-top:1px solid var(--color-border-secondary);">
+                  <a href={`/oferta/${offer.id}`} style="font-size:14px;font-weight:500;color:var(--color-text-secondary);text-decoration:none;transition:color 0.15s ease;">Ver detalles</a>
+                  <button style="font-size:14px;font-weight:500;color:var(--color-text-secondary);background:none;border:none;cursor:pointer;padding:0;transition:color 0.15s ease;">Guardar</button>
+                </div>
               </div>
-              <p style="font-size:14px;color:var(--color-text-secondary);margin-bottom:12px;">Consultora XYZ Ltda</p>
-              <div style="display:flex;align-items:center;gap:16px;font-size:12px;color:var(--color-text-tertiary);">
-                <span>Manizales, Caldas</span>
-                <span>Publicada hace 5 dias</span>
-              </div>
-            </div>
-            <div style="display:flex;flex-direction:column;align-items:flex-end;">
-              <div style="display:flex;align-items:baseline;gap:4px;">
-                <span style="font-size:24px;font-weight:600;color:var(--color-warning);">62</span>
-                <span style="font-size:12px;color:var(--color-text-tertiary);">/100</span>
-              </div>
-              <span style="font-size:12px;font-weight:500;color:var(--color-warning);">Buena</span>
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:16px;border-top:1px solid var(--color-border-secondary);">
-            <button style="font-size:14px;font-weight:500;color:var(--color-text-secondary);background:none;border:none;cursor:pointer;padding:0;transition:color 0.15s ease;">Ver detalles</button>
-            <button style="font-size:14px;font-weight:500;color:var(--color-text-secondary);background:none;border:none;cursor:pointer;padding:0;transition:color 0.15s ease;">Guardar</button>
-          </div>
+            );
+          })}
         </div>
-      </div>
+      )}
     </main>
   </div>
 </BaseLayout>
+
+<style>
+  @media (max-width: 768px) {
+    main.wrap {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+    div[style*="grid-template-columns:repeat(4, 1fr)"] {
+      grid-template-columns: 1fr !important;
+    }
+    div[style*="grid-template-columns:repeat(2, 1fr)"] {
+      grid-template-columns: 1fr !important;
+    }
+  }
+</style>

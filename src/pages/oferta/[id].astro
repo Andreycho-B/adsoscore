@@ -1,0 +1,556 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { prisma } from '../../lib/prisma';
+import { getScoreLabel } from '../../lib/scoring';
+import { getSession } from '../../lib/auth';
+
+const { id } = Astro.params;
+
+if (!id) {
+  return Astro.redirect('/dashboard');
+}
+
+const session = await getSession(Astro);
+const currentUserId = session.user?.id ?? null;
+
+const offer = await prisma.offer.findUnique({
+  where: { id },
+  include: {
+    reviews: {
+      include: {
+        user: { select: { name: true, image: true, id: true } },
+        helpfulVotes: currentUserId
+          ? { where: { userId: currentUserId }, select: { isHelpful: true } }
+          : false,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    },
+    _count: { select: { favorites: true, reviews: true } },
+  },
+});
+
+if (!offer) {
+  return Astro.redirect('/dashboard');
+}
+
+const isFavorited = currentUserId
+  ? !!(await prisma.favorite.findUnique({
+      where: { userId_offerId: { userId: currentUserId, offerId: id } },
+    }))
+  : false;
+
+const reviewSummary = await prisma.review.aggregate({
+  where: { offerId: id },
+  _avg: { rating: true },
+  _count: { rating: true },
+});
+
+function getScoreColor(score: number): string {
+  if (score >= 80) return 'var(--color-success)';
+  if (score >= 60) return 'var(--color-warning)';
+  return 'var(--color-error)';
+}
+
+function getModalidadColor(modalidad: string | null): string {
+  if (!modalidad) return 'var(--color-text-tertiary)';
+  if (modalidad === 'Remoto') return 'var(--color-success)';
+  if (modalidad === 'Hibrido') return 'var(--color-warning)';
+  return 'var(--color-text-secondary)';
+}
+
+function formatDate(date: Date | null): string {
+  if (!date) return '--';
+  return new Intl.DateTimeFormat('es-CO', { year: 'numeric', month: 'short', day: 'numeric' }).format(date);
+}
+
+function timeAgo(date: Date | null): string {
+  if (!date) return '';
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return 'Hoy';
+  if (diffDays === 1) return 'Ayer';
+  if (diffDays < 7) return `Hace ${diffDays} dias`;
+  if (diffDays < 30) return `Hace ${Math.floor(diffDays / 7)} semanas`;
+  return `Hace ${Math.floor(diffDays / 30)} meses`;
+}
+
+const scoreColor = getScoreColor(offer.score);
+const scoreLabel = getScoreLabel(offer.score);
+const avgRating = reviewSummary._avg.rating;
+const reviewCount = reviewSummary._count.rating;
+
+function renderStars(rating: number): string {
+  return Array.from({ length: 5 }, (_, i) =>
+    i < rating
+      ? '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--color-warning);margin-right:2px;"></span>'
+      : '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--color-border);margin-right:2px;"></span>'
+  ).join('');
+}
+
+const subScores = [
+  { label: 'Funciones ADS', value: offer.scoreFunciones, max: 20 },
+  { label: 'Stack GitHub', value: offer.scoreGitHub, max: 25 },
+  { label: 'RUES Valido', value: offer.scoreRUES, max: 10 },
+  { label: 'Ubicacion', value: offer.scoreUbicacion, max: 10 },
+  { label: 'Modalidad', value: offer.scoreModalidad, max: 5 },
+  { label: 'Tamano', value: offer.scoreTamano, max: 10 },
+  { label: 'Antiguedad', value: offer.scoreAntiguedad, max: 10 },
+  { label: 'Resenas', value: offer.scoreResenas, max: 5 },
+];
+---
+
+<BaseLayout title={`${offer.titulo} | ${offer.empresa}`} description={`Oferta de aprendizaje en ${offer.empresa} - ${offer.titulo}`}>
+  <div style="min-height:100vh;background:var(--color-bg-layout);">
+    <header style="background:var(--color-bg-container);border-bottom:1px solid var(--color-border);position:sticky;top:0;z-index:40;">
+      <div style="max-width:1200px;margin:0 auto;padding:0 24px;display:flex;justify-content:space-between;align-items:center;height:64px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <a href="/" style="font-weight:600;font-size:18px;letter-spacing:-0.01em;color:var(--color-primary);text-decoration:none;">ADSOscore</a>
+        </div>
+        <nav style="display:flex;gap:28px;align-items:center;">
+          <a href="/dashboard" style="font-size:14px;font-weight:600;color:var(--color-primary);text-decoration:none;">Ofertas</a>
+          <a href="/favorites" style="font-size:14px;font-weight:500;color:var(--color-text-secondary);text-decoration:none;transition:color 0.15s ease;">Favoritos</a>
+          <a href="/notifications" style="font-size:14px;font-weight:500;color:var(--color-text-secondary);text-decoration:none;transition:color 0.15s ease;">Notificaciones</a>
+        </nav>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <button style="font-size:14px;font-weight:500;color:var(--color-text-secondary);background:none;border:none;cursor:pointer;padding:0;">Mi perfil</button>
+        </div>
+      </div>
+    </header>
+
+    <main style="max-width:1200px;margin:0 auto;padding:32px 24px 48px;">
+      <nav style="font-size:13px;margin-bottom:24px;display:flex;align-items:center;gap:6px;">
+        <a href="/dashboard" style="color:var(--color-primary);text-decoration:none;font-weight:500;">Dashboard</a>
+        <span style="color:var(--color-text-tertiary);">/</span>
+        <span style="color:var(--color-text-secondary);">{offer.empresa}</span>
+        <span style="color:var(--color-text-tertiary);">/</span>
+        <span style="color:var(--color-text);font-weight:500;">{offer.titulo}</span>
+      </nav>
+
+      <div style="display:grid;grid-template-columns:1fr 360px;gap:32px;">
+        <div style="display:flex;flex-direction:column;gap:24px;">
+          <div style="background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:32px;box-shadow:0 1px 2px var(--color-fill-quaternary);">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:20px;">
+              <div style="flex:1;">
+                <p style="font-size:14px;color:var(--color-text-secondary);margin-bottom:4px;">{offer.empresa}</p>
+                <h1 style="font-size:28px;font-weight:600;color:var(--color-text);margin:0 0 12px 0;line-height:1.2;">{offer.titulo}</h1>
+                <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;">
+                  {(offer.ciudad || offer.departamento) && (
+                    <span style="font-size:13px;color:var(--color-text-tertiary);display:flex;align-items:center;gap:4px;">
+                      <span style="width:4px;height:4px;border-radius:50%;background:var(--color-text-tertiary);"></span>
+                      {[offer.ciudad, offer.departamento].filter(Boolean).join(', ')}
+                    </span>
+                  )}
+                  {offer.modalidad && (
+                    <span style="display:inline-flex;align-items:center;height:24px;padding:0 10px;font-size:12px;font-weight:500;background:var(--color-fill-secondary);color:{getModalidadColor(offer.modalidad)};border-radius:5px;">
+                      {offer.modalidad}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;min-width:80px;">
+                <div style="font-size:36px;font-weight:700;color:{scoreColor};line-height:1;">{Math.round(offer.score)}</div>
+                <div style="font-size:12px;color:var(--color-text-tertiary);margin-top:2px;">/ 100</div>
+                <div style="font-size:12px;font-weight:600;color:{scoreColor};margin-top:4px;">{scoreLabel}</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:28px;box-shadow:0 1px 2px var(--color-fill-quaternary);">
+            <h2 style="font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;color:var(--color-primary);margin:0 0 20px 0;">Desglose del puntaje</h2>
+            <div style="display:flex;flex-direction:column;gap:14px;">
+              {subScores.map((s) => {
+                const pct = s.max > 0 ? (s.value / s.max) * 100 : 0;
+                const barColor = pct >= 80 ? 'var(--color-success)' : pct >= 60 ? 'var(--color-warning)' : 'var(--color-error)';
+                return (
+                  <div style="display:grid;grid-template-columns:120px 1fr 48px;align-items:center;gap:12px;">
+                    <span style="font-size:13px;color:var(--color-text-secondary);font-weight:500;">{s.label}</span>
+                    <div style="height:6px;background:var(--color-fill-secondary);border-radius:3px;overflow:hidden;">
+                      <div style="height:100%;width:{pct}%;background:{barColor};border-radius:3px;transition:width 0.3s ease;"></div>
+                    </div>
+                    <span style="font-size:13px;font-weight:500;color:var(--color-text);text-align:right;">{s.value}<span style="color:var(--color-text-tertiary);">/{s.max}</span></span>
+                  </div>
+                );
+              })}
+            </div>
+            <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--color-border-secondary);display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:13px;font-weight:600;color:var(--color-text);">Puntaje total</span>
+              <span style="font-size:18px;font-weight:700;color:{scoreColor};">{Math.round(offer.score)} / 100</span>
+            </div>
+          </div>
+
+          {offer.funciones && (
+            <div style="background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:28px;box-shadow:0 1px 2px var(--color-fill-quaternary);">
+              <h2 style="font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;color:var(--color-primary);margin:0 0 16px 0;">Funciones</h2>
+              <p style="font-size:14px;line-height:1.7;color:var(--color-text-secondary);margin:0;white-space:pre-wrap;">{offer.funciones}</p>
+            </div>
+          )}
+
+          {offer.perfil && (
+            <div style="background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:28px;box-shadow:0 1px 2px var(--color-fill-quaternary);">
+              <h2 style="font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;color:var(--color-primary);margin:0 0 16px 0;">Perfil requerido</h2>
+              <p style="font-size:14px;line-height:1.7;color:var(--color-text-secondary);margin:0;white-space:pre-wrap;">{offer.perfil}</p>
+            </div>
+          )}
+
+          {offer.descripcion && (
+            <div style="background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:28px;box-shadow:0 1px 2px var(--color-fill-quaternary);">
+              <h2 style="font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;color:var(--color-primary);margin:0 0 16px 0;">Descripcion</h2>
+              <p style="font-size:14px;line-height:1.7;color:var(--color-text-secondary);margin:0;white-space:pre-wrap;">{offer.descripcion}</p>
+            </div>
+          )}
+
+          <div style="background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:28px;box-shadow:0 1px 2px var(--color-fill-quaternary);">
+            <h2 style="font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;color:var(--color-primary);margin:0 0 20px 0;">Resenas</h2>
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--color-border-secondary);">
+              <div style="display:flex;align-items:baseline;gap:4px;">
+                <span style="font-size:32px;font-weight:700;color:var(--color-text);">{avgRating ? avgRating.toFixed(1) : '--'}</span>
+                <span style="font-size:14px;color:var(--color-text-tertiary);">/ 5</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:4px;" set:html={renderStars(Math.round(avgRating || 0))} />
+              <span style="font-size:13px;color:var(--color-text-tertiary);">({reviewCount} {reviewCount === 1 ? 'resena' : 'resenas'})</span>
+            </div>
+
+            {currentUserId && (
+              <form id="review-form" data-offer-id={id} style="margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--color-border-secondary);">
+                <p style="font-size:13px;font-weight:500;color:var(--color-text);margin:0 0 10px 0;">Escribir una resena</p>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                  <span style="font-size:13px;color:var(--color-text-secondary);">Puntaje:</span>
+                  <div id="star-rating" style="display:flex;align-items:center;gap:6px;">
+                    {[1,2,3,4,5].map((n) => (
+                      <label style="cursor:pointer;display:flex;align-items:center;">
+                        <input type="radio" name="rating" value={n} style="display:none;" />
+                        <span class="star-circle" data-value={n} style="width:16px;height:16px;border-radius:50%;background:var(--color-border);border:2px solid var(--color-border);transition:background 0.15s ease, border-color 0.15s ease;"></span>
+                      </label>
+                    ))}
+                  </div>
+                  <span id="rating-label" style="font-size:12px;color:var(--color-text-tertiary);"></span>
+                </div>
+                <textarea
+                  id="review-content"
+                  maxlength="2000"
+                  rows="3"
+                  placeholder="Comparte tu experiencia con esta oferta..."
+                  style="width:100%;padding:10px 12px;font-size:14px;line-height:1.5;color:var(--color-text);background:var(--color-bg-container);border:1px solid var(--color-border);border-radius:var(--radius-md, 8px);resize:vertical;font-family:inherit;outline:none;transition:border-color 0.15s ease;"
+                  onfocus="this.style.borderColor='var(--color-primary)'"
+                  onblur="this.style.borderColor='var(--color-border)'"
+                ></textarea>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+                  <span id="char-count" style="font-size:12px;color:var(--color-text-tertiary);">0 / 2000</span>
+                  <button type="submit" style="height:36px;padding:0 18px;font-size:13px;font-weight:500;color:#fff;background:var(--color-primary);border:none;border-radius:var(--radius-md, 8px);cursor:pointer;transition:opacity 0.15s ease;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Publicar resena</button>
+                </div>
+              </form>
+            )}
+
+            {offer.reviews.length > 0 ? (
+              <div style="display:flex;flex-direction:column;gap:16px;">
+                {offer.reviews.map((review) => {
+                  const userVote = review.helpfulVotes?.[0]?.isHelpful ?? null;
+                  const isOwner = currentUserId === review.user.id;
+                  return (
+                    <div class="review-card" data-review-id={review.id} style="padding:16px;background:var(--color-fill-secondary);border-radius:8px;">
+                      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                          <div style="width:32px;height:32px;border-radius:50%;background:var(--color-primary);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;">
+                            {review.user.name ? review.user.name.charAt(0).toUpperCase() : '?'}
+                          </div>
+                          <div>
+                            <p style="font-size:13px;font-weight:500;color:var(--color-text);margin:0;">{review.user.name || 'Anonimo'}</p>
+                            <p style="font-size:12px;color:var(--color-text-tertiary);margin:0;">{timeAgo(review.createdAt)}</p>
+                          </div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:4px;" set:html={renderStars(review.rating)} />
+                      </div>
+                      <p style="font-size:14px;line-height:1.6;color:var(--color-text-secondary);margin:0 0 10px 0;">{review.content}</p>
+                      <div style="display:flex;align-items:center;gap:8px;">
+                        <button class={`helpful-btn ${userVote === true ? 'active' : ''}`} data-review-id={review.id} data-helpful="true" style="display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 10px;font-size:12px;font-weight:500;color:var(--color-text-secondary);background:var(--color-bg-container);border:1px solid var(--color-border);border-radius:var(--radius-sm, 4px);cursor:pointer;transition:all 0.15s ease;">
+                          Util
+                          <span class="helpful-count" style="font-size:11px;color:var(--color-text-tertiary);">({review.helpfulCount})</span>
+                        </button>
+                        <button class={`helpful-btn ${userVote === false ? 'active' : ''}`} data-review-id={review.id} data-helpful="false" style="display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 10px;font-size:12px;font-weight:500;color:var(--color-text-secondary);background:var(--color-bg-container);border:1px solid var(--color-border);border-radius:var(--radius-sm, 4px);cursor:pointer;transition:all 0.15s ease;">
+                          No util
+                          <span class="helpful-count" style="font-size:11px;color:var(--color-text-tertiary);">({review.notHelpfulCount})</span>
+                        </button>
+                        {isOwner && (
+                          <div style="display:flex;align-items:center;gap:4px;margin-left:auto;">
+                            <button class="edit-review-btn" data-review-id={review.id} data-rating={review.rating} data-content={review.content} style="height:28px;padding:0 10px;font-size:12px;font-weight:500;color:var(--color-text-secondary);background:var(--color-bg-container);border:1px solid var(--color-border);border-radius:var(--radius-sm, 4px);cursor:pointer;transition:all 0.15s ease;">Editar</button>
+                            <button class="delete-review-btn" data-review-id={review.id} style="height:28px;padding:0 10px;font-size:12px;font-weight:500;color:var(--color-error);background:var(--color-bg-container);border:1px solid var(--color-border);border-radius:var(--radius-sm, 4px);cursor:pointer;transition:all 0.15s ease;">Eliminar</button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p style="font-size:14px;color:var(--color-text-tertiary);text-align:center;padding:32px 0;margin:0;">No hay resenas aun</p>
+            )}
+          </div>
+        </div>
+
+        <aside style="display:flex;flex-direction:column;gap:20px;">
+          <div style="background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:24px;box-shadow:0 1px 2px var(--color-fill-quaternary);position:sticky;top:88px;">
+            <h2 style="font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;color:var(--color-primary);margin:0 0 20px 0;">Datos de la empresa</h2>
+            <div style="display:flex;flex-direction:column;gap:14px;">
+              <div style="display:flex;flex-direction:column;gap:2px;">
+                <span style="font-size:12px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.05em;">NIT</span>
+                <span style="font-size:14px;color:var(--color-text);">{offer.nit || '--'}</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:2px;">
+                <span style="font-size:12px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.05em;">Direccion</span>
+                <span style="font-size:14px;color:var(--color-text);">{offer.direccion || '--'}</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:2px;">
+                <span style="font-size:12px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.05em;">Telefono</span>
+                <span style="font-size:14px;color:var(--color-text);">{offer.telefono || '--'}</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:2px;">
+                <span style="font-size:12px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.05em;">Contacto</span>
+                <span style="font-size:14px;color:var(--color-text);">{offer.contacto || '--'}</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:2px;">
+                <span style="font-size:12px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.05em;">Email</span>
+                <span style="font-size:14px;color:var(--color-text);">{offer.email || '--'}</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:2px;">
+                <span style="font-size:12px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.05em;">Fecha publicacion</span>
+                <span style="font-size:14px;color:var(--color-text);">{formatDate(offer.fechaPublicacion)}</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:2px;">
+                <span style="font-size:12px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.05em;">Fecha cierre</span>
+                <span style="font-size:14px;color:var(--color-text);">{formatDate(offer.fechaCierre)}</span>
+              </div>
+            </div>
+
+            <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--color-border-secondary);display:flex;flex-direction:column;gap:10px;">
+              <button id="favorite-btn" data-offer-id={id} style="width:100%;height:40px;font-size:14px;font-weight:500;color:#fff;background:var(--color-primary);border:none;border-radius:8px;cursor:pointer;transition:opacity 0.15s ease;display:flex;align-items:center;justify-content:center;gap:6px;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                <span id="favorite-icon" style="font-size:16px;color:{isFavorited ? 'var(--color-warning)' : 'inherit'};">{isFavorited ? '\u2605' : '\u2606'}</span>
+                <span id="favorite-text">{isFavorited ? 'Quitar de favoritos' : 'Guardar en favoritos'}</span>
+              </button>
+              <button style="width:100%;height:40px;font-size:14px;font-weight:500;color:var(--color-text-secondary);background:var(--color-fill-secondary);border:1px solid var(--color-border);border-radius:8px;cursor:pointer;transition:background 0.15s ease;" onmouseover="this.style.background='var(--color-fill-tertiary)'" onmouseout="this.style.background='var(--color-fill-secondary)'">Reportar oferta</button>
+            </div>
+          </div>
+
+          <a href="/dashboard" style="display:flex;align-items:center;justify-content:center;height:40px;font-size:14px;font-weight:500;color:var(--color-text-secondary);background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;text-decoration:none;transition:color 0.15s ease;" onmouseover="this.style.color='var(--color-primary)'" onmouseout="this.style.color='var(--color-text-secondary)'">Volver al dashboard</a>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const btn = document.getElementById('favorite-btn');
+    const offerId = btn?.dataset.offerId;
+    const icon = document.getElementById('favorite-icon');
+    const text = document.getElementById('favorite-text');
+
+    btn?.addEventListener('click', async () => {
+      const res = await fetch('/api/favorites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ offerId }),
+      });
+      if (res.ok) {
+        const { favorited } = await res.json();
+        if (icon && text) {
+          icon.textContent = favorited ? '\u2605' : '\u2606';
+          icon.style.color = favorited ? 'var(--color-warning)' : 'inherit';
+          text.textContent = favorited ? 'Quitar de favoritos' : 'Guardar en favoritos';
+        }
+      }
+    });
+  </script>
+<style>
+  .star-circle.filled {
+    background: var(--color-warning);
+    border-color: var(--color-warning);
+  }
+  .helpful-btn.active {
+    background: var(--color-primary);
+    color: #fff;
+    border-color: var(--color-primary);
+  }
+  .helpful-btn.active .helpful-count {
+    color: rgba(255,255,255,0.7);
+  }
+</style>
+
+<script>
+  const form = document.getElementById('review-form') as HTMLFormElement | null;
+  const textarea = document.getElementById('review-content') as HTMLTextAreaElement | null;
+  const charCount = document.getElementById('char-count');
+  const ratingLabel = document.getElementById('rating-label');
+
+  const ratingLabels: Record<number, string> = {
+    1: 'Mala',
+    2: 'Regular',
+    3: 'Buena',
+    4: 'Muy buena',
+    5: 'Excelente',
+  };
+
+  // Star rating selector
+  document.querySelectorAll('.star-circle').forEach((circle) => {
+    circle.addEventListener('click', () => {
+      const value = parseInt(circle.getAttribute('data-value') || '0', 10);
+      document.querySelectorAll('.star-circle').forEach((c) => {
+        const v = parseInt(c.getAttribute('data-value') || '0', 10);
+        c.classList.toggle('filled', v <= value);
+      });
+      const radio = (circle.closest('label') as HTMLLabelElement)?.querySelector('input[type="radio"]') as HTMLInputElement | null;
+      if (radio) radio.checked = true;
+      if (ratingLabel) ratingLabel.textContent = ratingLabels[value] || '';
+    });
+
+    circle.addEventListener('mouseenter', () => {
+      const value = parseInt(circle.getAttribute('data-value') || '0', 10);
+      document.querySelectorAll('.star-circle').forEach((c) => {
+        const v = parseInt(c.getAttribute('data-value') || '0', 10);
+        if (v <= value) {
+          c.style.background = 'var(--color-warning)';
+          c.style.borderColor = 'var(--color-warning)';
+        }
+      });
+    });
+
+    circle.addEventListener('mouseleave', () => {
+      document.querySelectorAll('.star-circle').forEach((c) => {
+        const radio = (c.closest('label') as HTMLLabelElement)?.querySelector('input[type="radio"]') as HTMLInputElement | null;
+        if (radio?.checked) {
+          c.style.background = 'var(--color-warning)';
+          c.style.borderColor = 'var(--color-warning)';
+        } else {
+          c.style.background = 'var(--color-border)';
+          c.style.borderColor = 'var(--color-border)';
+        }
+      });
+    });
+  });
+
+  // Character count
+  textarea?.addEventListener('input', () => {
+    if (charCount) {
+      const len = textarea.value.length;
+      charCount.textContent = `${len} / 2000`;
+      charCount.style.color = len > 1900 ? 'var(--color-error)' : 'var(--color-text-tertiary)';
+    }
+  });
+
+  // Form submission
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const rating = (document.querySelector('input[name="rating"]:checked') as HTMLInputElement | null)?.value;
+    const content = textarea?.value?.trim();
+    const offerId = form.dataset.offerId;
+
+    if (!rating) {
+      alert('Selecciona una puntuacion');
+      return;
+    }
+    if (!content) {
+      alert('Escribe tu resena');
+      return;
+    }
+
+    const res = await fetch('/api/reviews', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ offerId, rating: parseInt(rating, 10), content }),
+    });
+    if (res.ok) location.reload();
+    else {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || 'Error al publicar resena');
+    }
+  });
+
+  // Helpful vote buttons
+  document.querySelectorAll('.helpful-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const reviewId = btn.getAttribute('data-review-id');
+      const isHelpful = btn.getAttribute('data-helpful') === 'true';
+      const res = await fetch('/api/helpful', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reviewId, isHelpful }),
+      });
+      if (res.ok) location.reload();
+    });
+  });
+
+  // Edit review
+  document.querySelectorAll('.edit-review-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const reviewId = btn.getAttribute('data-review-id');
+      const rating = btn.getAttribute('data-rating');
+      const content = btn.getAttribute('data-content');
+      const card = document.querySelector(`.review-card[data-review-id="${reviewId}"]`);
+      if (!card) return;
+
+      const existing = card.querySelector('.edit-form');
+      if (existing) { existing.remove(); return; }
+
+      const editDiv = document.createElement('div');
+      editDiv.className = 'edit-form';
+      editDiv.style.cssText = 'margin-top:12px;padding-top:12px;border-top:1px solid var(--color-border);';
+      editDiv.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="font-size:13px;color:var(--color-text-secondary);">Puntaje:</span>
+          <div class="edit-star-rating" style="display:flex;align-items:center;gap:6px;">
+            ${[1,2,3,4,5].map((n) => `
+              <span class="edit-star-circle ${n <= Number(rating) ? 'filled' : ''}" data-value="${n}" style="width:14px;height:14px;border-radius:50%;background:${n <= Number(rating) ? 'var(--color-warning)' : 'var(--color-border)'};border:2px solid ${n <= Number(rating) ? 'var(--color-warning)' : 'var(--color-border)'};cursor:pointer;transition:all 0.15s ease;"></span>
+            `).join('')}
+          </div>
+        </div>
+        <textarea class="edit-content" maxlength="2000" rows="3" style="width:100%;padding:8px 10px;font-size:13px;line-height:1.5;color:var(--color-text);background:var(--color-bg-container);border:1px solid var(--color-border);border-radius:var(--radius-md, 8px);resize:vertical;font-family:inherit;outline:none;">${content}</textarea>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+          <button class="save-edit-btn" data-review-id="${reviewId}" style="height:32px;padding:0 14px;font-size:12px;font-weight:500;color:#fff;background:var(--color-primary);border:none;border-radius:var(--radius-md, 8px);cursor:pointer;">Guardar</button>
+          <button class="cancel-edit-btn" style="height:32px;padding:0 14px;font-size:12px;font-weight:500;color:var(--color-text-secondary);background:var(--color-fill-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md, 8px);cursor:pointer;">Cancelar</button>
+        </div>
+      `;
+      card.appendChild(editDiv);
+
+      let editRating = Number(rating);
+      editDiv.querySelectorAll('.edit-star-circle').forEach((c) => {
+        c.addEventListener('click', () => {
+          editRating = parseInt(c.getAttribute('data-value') || '0', 10);
+          editDiv.querySelectorAll('.edit-star-circle').forEach((s) => {
+            const v = parseInt(s.getAttribute('data-value') || '0', 10);
+            const isActive = v <= editRating;
+            s.style.background = isActive ? 'var(--color-warning)' : 'var(--color-border)';
+            s.style.borderColor = isActive ? 'var(--color-warning)' : 'var(--color-border)';
+            s.classList.toggle('filled', isActive);
+          });
+        });
+      });
+
+      editDiv.querySelector('.cancel-edit-btn')?.addEventListener('click', () => editDiv.remove());
+      editDiv.querySelector('.save-edit-btn')?.addEventListener('click', async () => {
+        const newContent = (editDiv.querySelector('.edit-content') as HTMLTextAreaElement)?.value?.trim();
+        if (!newContent) { alert('Escribe tu resena'); return; }
+        const res = await fetch(`/api/reviews/${reviewId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rating: editRating, content: newContent }),
+        });
+        if (res.ok) location.reload();
+        else {
+          const data = await res.json().catch(() => ({}));
+          alert(data.error || 'Error al actualizar resena');
+        }
+      });
+    });
+  });
+
+  // Delete review
+  document.querySelectorAll('.delete-review-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Eliminar esta resena?')) return;
+      const reviewId = btn.getAttribute('data-review-id');
+      const res = await fetch(`/api/reviews/${reviewId}`, { method: 'DELETE' });
+      if (res.ok) location.reload();
+    });
+  });
+</script>
+
+</BaseLayout>

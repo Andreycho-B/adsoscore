@@ -29,7 +29,26 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npx prisma generate
       - run: npm run build
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: vercel-check
+        run: echo "has_token=${{ secrets.VERCEL_TOKEN != '' }}" >> "$GITHUB_OUTPUT"
+      - if: steps.vercel-check.outputs.has_token == 'true'
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+      - if: steps.vercel-check.outputs.has_token != 'true'
+        run: echo "::notice::Vercel secrets not configured. Skipping deploy. Add VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID to repository secrets."
 
   sonarcloud:
     name: SonarCloud
@@ -39,10 +58,16 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-java@v4
+      - id: sonar-check
+        run: echo "has_token=${{ secrets.SONAR_TOKEN != '' }}" >> "$GITHUB_OUTPUT"
+      - if: steps.sonar-check.outputs.has_token == 'true'
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
-      - uses: SonarSource/sonarqube-scan-action@v6
+      - if: steps.sonar-check.outputs.has_token == 'true'
+        uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - if: steps.sonar-check.outputs.has_token != 'true'
+        run: echo "::notice::SonarCloud token not configured. Skipping analysis. Add SONAR_TOKEN to repository secrets."
