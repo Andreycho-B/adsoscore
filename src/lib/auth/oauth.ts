@@ -55,11 +55,18 @@ export async function validateOAuthState(state: string): Promise<OAuthState | nu
   }
 }
 
+function getAppUrl(): string {
+  return import.meta.env.PUBLIC_APP_URL
+    || (typeof process !== 'undefined' ? process.env.PUBLIC_APP_URL : undefined)
+    || (typeof process !== 'undefined' ? process.env.RENDER_EXTERNAL_URL : undefined)
+    || 'http://localhost:4321';
+}
+
 export function getGoogleAuthURL(state: string): string {
   const clientId = import.meta.env.GOOGLE_CLIENT_ID;
   if (!clientId) throw new Error('GOOGLE_CLIENT_ID environment variable is required');
 
-  const redirectUri = `${import.meta.env.PUBLIC_APP_URL}/api/auth/callback/google`;
+  const redirectUri = `${getAppUrl()}/api/auth/callback/google`;
   const scope = 'openid email profile';
   return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&state=${state}`;
 }
@@ -68,7 +75,7 @@ export function getGitHubAuthURL(state: string): string {
   const clientId = import.meta.env.GITHUB_CLIENT_ID;
   if (!clientId) throw new Error('GITHUB_CLIENT_ID environment variable is required');
 
-  const redirectUri = `${import.meta.env.PUBLIC_APP_URL}/api/auth/callback/github`;
+  const redirectUri = `${getAppUrl()}/api/auth/callback/github`;
   const scope = 'read:user user:email';
   return `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&state=${state}`;
 }
@@ -89,7 +96,7 @@ export async function exchangeGoogleCode(code: string): Promise<SessionUser | nu
         code,
         client_id: clientId,
         client_secret: clientSecret,
-        redirect_uri: `${import.meta.env.PUBLIC_APP_URL}/api/auth/callback/google`,
+        redirect_uri: `${getAppUrl()}/api/auth/callback/google`,
         grant_type: 'authorization_code',
       }),
     });
