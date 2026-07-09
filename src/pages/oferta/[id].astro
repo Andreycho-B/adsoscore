@@ -90,7 +90,7 @@ function renderStars(rating: number): string {
 }
 
 const subScores = [
-  { label: 'Funciones ADS', value: offer.scoreFunciones, max: 20 },
+  { label: 'Funciones ADSO', value: offer.scoreFunciones, max: 20 },
   { label: 'Stack GitHub', value: offer.scoreGitHub, max: 25 },
   { label: 'RUES Valido', value: offer.scoreRUES, max: 10 },
   { label: 'Ubicacion', value: offer.scoreUbicacion, max: 10 },
@@ -114,7 +114,7 @@ const subScores = [
           <a href="/notifications" style="font-size:14px;font-weight:500;color:var(--color-text-secondary);text-decoration:none;transition:color 0.15s ease;">Notificaciones</a>
         </nav>
         <div style="display:flex;align-items:center;gap:16px;">
-          <button style="font-size:14px;font-weight:500;color:var(--color-text-secondary);background:none;border:none;cursor:pointer;padding:0;">Mi perfil</button>
+          <a href="/perfil" style="font-size:14px;font-weight:500;color:var(--color-text-secondary);text-decoration:none;transition:color 0.15s ease;">Mi perfil</a>
         </div>
       </div>
     </header>
@@ -203,6 +203,7 @@ const subScores = [
 
           <div style="background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:28px;box-shadow:0 1px 2px var(--color-fill-quaternary);">
             <h2 style="font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;color:var(--color-primary);margin:0 0 20px 0;">Resenas</h2>
+            <p style="font-size:13px;color:var(--color-text-secondary);margin:-12px 0 20px 0;"><strong>¿Ya trabajaste en esta empresa?</strong> Comparte tu experiencia y ayuda a otros aprendices a decidir.</p>
             <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--color-border-secondary);">
               <div style="display:flex;align-items:baseline;gap:4px;">
                 <span style="font-size:32px;font-weight:700;color:var(--color-text);">{avgRating ? avgRating.toFixed(1) : '--'}</span>
@@ -328,7 +329,7 @@ const subScores = [
                 <span id="favorite-icon" style={`font-size:16px;color:${isFavorited ? 'var(--color-warning)' : 'inherit'};`}>{isFavorited ? '\u2605' : '\u2606'}</span>
                 <span id="favorite-text">{isFavorited ? 'Quitar de favoritos' : 'Guardar en favoritos'}</span>
               </button>
-              <button style="width:100%;height:40px;font-size:14px;font-weight:500;color:var(--color-text-secondary);background:var(--color-fill-secondary);border:1px solid var(--color-border);border-radius:8px;cursor:pointer;transition:background 0.15s ease;" onmouseover="this.style.background='var(--color-fill-tertiary)'" onmouseout="this.style.background='var(--color-fill-secondary)'">Reportar oferta</button>
+              <button style="width:100%;height:40px;font-size:14px;font-weight:500;color:var(--color-text-secondary);background:var(--color-fill-secondary);border:1px solid var(--color-border);border-radius:8px;cursor:pointer;transition:background 0.15s ease;" onmouseover="this.style.background='var(--color-fill-tertiary)'" onmouseout="this.style.background='var(--color-fill-secondary)'" onclick="alert('Proximamente. Esta funcionalidad estara disponible pronto.')">Reportar oferta</button>
             </div>
           </div>
 

@@ -1,0 +1,38 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getSession } from '../lib/auth/session';
+
+const session = await getSession(Astro.request);
+---
+
+<BaseLayout title="Favoritos">
+  {session ? (
+    <div style="min-height:100vh;background:var(--color-bg-layout);">
+      <header style="background:var(--color-bg-container);border-bottom:1px solid var(--color-border);position:sticky;top:0;z-index:40;">
+        <div class="wrap" style="display:flex;justify-content:space-between;align-items:center;height:64px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <a href="/" style="font-weight:600;font-size:18px;letter-spacing:-0.01em;color:var(--color-primary);text-decoration:none;">ADSOscore</a>
+          </div>
+          <nav aria-label="Navegacion principal" style="display:flex;gap:28px;align-items:center;">
+            <a href="/dashboard" style="font-size:14px;font-weight:500;color:var(--color-text-secondary);text-decoration:none;transition:color 0.15s ease;">Ofertas</a>
+            <a href="/favorites" style="font-size:14px;font-weight:600;color:var(--color-primary);text-decoration:none;">Favoritos</a>
+            <a href="/notifications" style="font-size:14px;font-weight:500;color:var(--color-text-secondary);text-decoration:none;transition:color 0.15s ease;">Notificaciones</a>
+          </nav>
+          <div style="display:flex;align-items:center;gap:16px;">
+            <a href="/perfil" style="font-size:14px;font-weight:500;color:var(--color-text-secondary);text-decoration:none;">Mi perfil</a>
+          </div>
+        </div>
+      </header>
+      <main class="wrap" id="main-content" style="padding-top:64px;padding-bottom:48px;">
+        <div style="max-width:480px;margin:0 auto;text-align:center;">
+          <div style="font-size:48px;margin-bottom:16px;">&#128722;</div>
+          <h1 style="font-size:24px;font-weight:600;margin-bottom:8px;">Favoritos</h1>
+          <p style="font-size:14px;color:var(--color-text-secondary);margin-bottom:24px;">Proximamente. Aca podras guardar y organizar tus ofertas favoritas.</p>
+          <a href="/dashboard" style="display:inline-block;height:36px;line-height:36px;padding:0 20px;font-size:14px;font-weight:600;background:var(--color-primary);color:#fff;border:none;border-radius:8px;text-decoration:none;">Volver al dashboard</a>
+        </div>
+      </main>
+    </div>
+  ) : (
+    <meta http-equiv="refresh" content="0;url=/login" />
+  )}
+</BaseLayout>
