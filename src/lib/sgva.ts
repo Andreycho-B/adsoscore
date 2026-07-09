@@ -149,8 +149,10 @@ export async function fetchOffersFromSGVA(
   }
 
   const offers: SGVAOffer[] = [];
+  let processed = 0;
 
   for (const solId of solicitudIds) {
+    processed++;
     try {
       const detailRes = await fetch(
         `${SGVA_BASE}/Solicitudes/ConsultarSolicitud?solicitudID=${solId}`,
@@ -185,8 +187,8 @@ export async function fetchOffersFromSGVA(
       // Continuar con la siguiente oferta ante cualquier error individual
     }
 
-    if ((i + 1) % 20 === 0) {
-      console.log(`SGVA scraper: ${i + 1}/${solicitudIds.length} solicitudes procesadas`);
+    if (processed % 20 === 0) {
+      console.log(`SGVA scraper: ${processed}/${solicitudIds.length} solicitudes procesadas`);
     }
 
     await new Promise((r) => setTimeout(r, 50));

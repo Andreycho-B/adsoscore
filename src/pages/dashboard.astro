@@ -36,7 +36,26 @@ if (modalidad) {
 }
 
 let offers: any[] = [];
+let departamentos: string[] = [];
+let ciudades: string[] = [];
+
 if (hasSynced) {
+  const deptResult = await prisma.offer.findMany({
+    where: { isActive: true, isVisible: true },
+    select: { departamento: true },
+    distinct: ['departamento'],
+    orderBy: { departamento: 'asc' },
+  });
+  departamentos = deptResult.map((r) => r.departamento).filter(Boolean) as string[];
+
+  const cityResult = await prisma.offer.findMany({
+    where: { isActive: true, isVisible: true },
+    select: { ciudad: true },
+    distinct: ['ciudad'],
+    orderBy: { ciudad: 'asc' },
+  });
+  ciudades = cityResult.map((r) => r.ciudad).filter(Boolean) as string[];
+
   offers = await prisma.offer.findMany({
     where,
     orderBy: { score: 'desc' },
@@ -96,7 +115,16 @@ function buildFilterUrl(params: Record<string, string>) {
         <p id="sgva-status" style="margin-top:12px;font-size:13px;display:none;"></p>
       </div>
 
-      <div style="background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:20px;margin-bottom:24px;">
+      {!hasSynced ? (
+        <div style="background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:64px 24px;text-align:center;">
+          <div style="font-size:48px;margin-bottom:16px;">📋</div>
+          <h2 style="font-size:22px;font-weight:600;margin-bottom:8px;">Sincroniza tus datos del SGVA</h2>
+          <p style="font-size:14px;color:var(--color-text-secondary);max-width:440px;margin:0 auto 24px;">Ingresa tu numero de documento y contraseña del portal SGVA para obtener las ofertas de aprendizaje mas recientes y sus evaluaciones.</p>
+          <button id="btn-sgva-sync-main" style="height:40px;padding:0 24px;font-size:14px;font-weight:600;background:var(--color-primary);color:#fff;border:none;border-radius:8px;cursor:pointer;">Sincronizar con SGVA</button>
+        </div>
+      ) : (
+        <>
+        <div style="background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:20px;margin-bottom:24px;">
         <p style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;color:var(--color-primary);margin-bottom:16px;">Filtros</p>
         <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;">
           <div>
@@ -107,11 +135,9 @@ function buildFilterUrl(params: Record<string, string>) {
               onchange={`window.location='${buildFilterUrl({ departamento: '__VAL__', ciudad, modalidad })}'.replace('__VAL__', this.value)`}
             >
               <option value="">Todos</option>
-              <option value="Caldas" selected={departamento === 'Caldas'}>Caldas</option>
-              <option value="Risaralda" selected={departamento === 'Risaralda'}>Risaralda</option>
-              <option value="Antioquia" selected={departamento === 'Antioquia'}>Antioquia</option>
-              <option value="Cundinamarca" selected={departamento === 'Cundinamarca'}>Cundinamarca</option>
-              <option value="Santander" selected={departamento === 'Santander'}>Santander</option>
+              {departamentos.map((d) => (
+                <option value={d} selected={departamento === d}>{d}</option>
+              ))}
             </select>
           </div>
           <div>
@@ -122,11 +148,9 @@ function buildFilterUrl(params: Record<string, string>) {
               onchange={`window.location='${buildFilterUrl({ departamento, ciudad: '__VAL__', modalidad })}'.replace('__VAL__', this.value)`}
             >
               <option value="">Todas</option>
-              <option value="Manizales" selected={ciudad === 'Manizales'}>Manizales</option>
-              <option value="Pereira" selected={ciudad === 'Pereira'}>Pereira</option>
-              <option value="Medellin" selected={ciudad === 'Medellin'}>Medellin</option>
-              <option value="Bogota" selected={ciudad === 'Bogota'}>Bogota</option>
-              <option value="Bucaramanga" selected={ciudad === 'Bucaramanga'}>Bucaramanga</option>
+              {ciudades.map((c) => (
+                <option value={c} selected={ciudad === c}>{c}</option>
+              ))}
             </select>
           </div>
           <div>
@@ -144,15 +168,7 @@ function buildFilterUrl(params: Record<string, string>) {
           </div>
         </div>
       </div>
-
-      {!hasSynced ? (
-        <div style="background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:64px 24px;text-align:center;">
-          <div style="font-size:48px;margin-bottom:16px;">📋</div>
-          <h2 style="font-size:22px;font-weight:600;margin-bottom:8px;">Sincroniza tus datos del SGVA</h2>
-          <p style="font-size:14px;color:var(--color-text-secondary);max-width:440px;margin:0 auto 24px;">Ingresa tu numero de documento y contraseña del portal SGVA para obtener las ofertas de aprendizaje mas recientes y sus evaluaciones.</p>
-          <button id="btn-sgva-sync-main" style="height:40px;padding:0 24px;font-size:14px;font-weight:600;background:var(--color-primary);color:#fff;border:none;border-radius:8px;cursor:pointer;">Sincronizar con SGVA</button>
-        </div>
-      ) : offers.length === 0 ? (
+      {offers.length === 0 ? (
         <div style="background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:48px 24px;text-align:center;">
           <p style="font-size:16px;color:var(--color-text-secondary);">No se encontraron ofertas para los filtros seleccionados</p>
         </div>
@@ -195,6 +211,8 @@ function buildFilterUrl(params: Record<string, string>) {
             );
           })}
         </div>
+      )}
+      </>
       )}
     </main>
   </div>
