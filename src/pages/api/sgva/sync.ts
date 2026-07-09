@@ -45,10 +45,15 @@ export const POST: APIRoute = async (context) => {
 
     let created = 0;
     let updated = 0;
+    const syncedIds: string[] = [];
 
     for (const offer of offers) {
       const modalidad = detectModalidad(offer.funciones || '', offer.perfil || '');
       const isRelevant = passesHardFilter({ perfil: offer.perfil || '', funciones: offer.funciones || '' });
+
+      const cierreDate = parseDate(offer.fecha_cierre);
+      const fechaCierreISO = cierreDate ? cierreDate.toISOString() : undefined;
+
       const { total, breakdown } = calculateScore({
         perfil: offer.perfil || '',
         funciones: offer.funciones || '',
@@ -56,7 +61,7 @@ export const POST: APIRoute = async (context) => {
         modalidad,
         empresa: offer.empresa,
         nit: offer.nit,
-        fecha_cierre: offer.fecha_cierre,
+        fecha_cierre: fechaCierreISO,
       });
 
       const data = {
@@ -75,7 +80,7 @@ export const POST: APIRoute = async (context) => {
         email: offer.email || null,
         modalidad,
         fechaPublicacion: parseDate(offer.fecha_creacion),
-        fechaCierre: parseDate(offer.fecha_cierre),
+        fechaCierre: cierreDate,
         score: total,
         scoreGitHub: 0,
         scoreFunciones: breakdown["funciones_ads"] ?? 0,
@@ -106,7 +111,17 @@ export const POST: APIRoute = async (context) => {
         await prisma.offer.create({ data });
         created++;
       }
+      syncedIds.push(offer.id);
     }
+
+    const deactivated = await prisma.offer.updateMany({
+      where: {
+        sgvaId: { notIn: syncedIds },
+        isActive: true,
+      },
+      data: { isActive: false },
+    });
+    console.log(`SGVA sync: ${deactivated.count} ofertas viejas desactivadas`);
 
     await prisma.user.update({
       where: { id: session.user.id },
@@ -118,6 +133,7 @@ export const POST: APIRoute = async (context) => {
         total: offers.length,
         created,
         updated,
+        deactivated: deactivated.count,
         especialidadId,
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
