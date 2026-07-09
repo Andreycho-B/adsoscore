@@ -281,6 +281,21 @@ export function calculateScore(offer: {
   return { total, breakdown };
 }
 
+export function detectModalidad(funciones: string, perfil: string): string {
+  const combined = `${funciones} ${perfil}`;
+  const lower = combined
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  if (["remoto", "virtual", "home office"].some((m) => lower.includes(m))) {
+    return "Remoto";
+  }
+  if (lower.includes("hibrido")) {
+    return "Hibrido";
+  }
+  return "Presencial";
+}
+
 export function getScoreLabel(score: number): string {
   if (score >= 80) return "Excelente";
   if (score >= 60) return "Buena";

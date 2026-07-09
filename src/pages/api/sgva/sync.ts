@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { prisma } from '../../../lib/prisma';
 import { getSession } from '../../../lib/auth';
 import { loginToSGVA, fetchOffersFromSGVA, type SGVAOffer } from '../../../lib/sgva';
+import { calculateScore, passesHardFilter, detectModalidad } from '../../../lib/scoring';
 
 function parseDate(dateStr: string): Date | null {
   if (!dateStr || typeof dateStr !== 'string') return null;
@@ -46,6 +47,18 @@ export const POST: APIRoute = async (context) => {
     let updated = 0;
 
     for (const offer of offers) {
+      const modalidad = detectModalidad(offer.funciones || '', offer.perfil || '');
+      const isRelevant = passesHardFilter({ perfil: offer.perfil || '', funciones: offer.funciones || '' });
+      const { total, breakdown } = calculateScore({
+        perfil: offer.perfil || '',
+        funciones: offer.funciones || '',
+        ciudad: offer.ciudad?.trim(),
+        modalidad,
+        empresa: offer.empresa,
+        nit: offer.nit,
+        fecha_cierre: offer.fecha_cierre,
+      });
+
       const data = {
         sgvaId: offer.id,
         titulo: offer.especialidad || 'Sin titulo',
@@ -60,8 +73,22 @@ export const POST: APIRoute = async (context) => {
         telefono: offer.telefono || null,
         contacto: offer.contacto || null,
         email: offer.email || null,
+        modalidad,
         fechaPublicacion: parseDate(offer.fecha_creacion),
         fechaCierre: parseDate(offer.fecha_cierre),
+        score: total,
+        scoreGitHub: 0,
+        scoreFunciones: breakdown["funciones_ads"] ?? 0,
+        scoreRUES: breakdown["rues_activo"] ?? 0,
+        scoreUbicacion: breakdown["ciudad_prioritaria"] ?? 0,
+        scoreModalidad: breakdown["modalidad_remota"] ?? 0,
+        scoreResenas: 0,
+        scoreLinkedIn: 0,
+        scoreTamano: breakdown["empresa"] ?? 0,
+        scoreAntiguedad: breakdown["fecha_cierre"] ?? 0,
+        isRelevantForAds: isRelevant,
+        isActive: true,
+        isVisible: isRelevant,
       };
 
       const existing = await prisma.offer.findUnique({
@@ -72,7 +99,7 @@ export const POST: APIRoute = async (context) => {
       if (existing) {
         await prisma.offer.update({
           where: { id: existing.id },
-          data: { ...data, isActive: true },
+          data,
         });
         updated++;
       } else {
