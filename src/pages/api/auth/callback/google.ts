@@ -45,6 +45,9 @@ export const GET: APIRoute = async (context) => {
     return redirect('/dashboard');
   } catch (error) {
     console.error('Google callback error:', error instanceof Error ? error.message : 'Unknown error');
+    if (error instanceof Error && error.message === 'email_collision') {
+      return redirect('/login?error=email_registered');
+    }
     return redirect('/login?error=internal');
   }
 };

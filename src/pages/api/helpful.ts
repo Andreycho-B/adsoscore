@@ -30,62 +30,59 @@ export const POST: APIRoute = async (context) => {
       });
     }
 
-    const existing = await prisma.helpfulVote.findUnique({
-      where: {
-        userId_reviewId: {
-          userId: session.user.id,
-          reviewId,
+    const result = await prisma.$transaction(async (tx) => {
+      const existing = await tx.helpfulVote.findUnique({
+        where: {
+          userId_reviewId: {
+            userId: session.user.id,
+            reviewId,
+          },
         },
-      },
-    });
+      });
 
-    if (existing) {
-      if (existing.isHelpful === isHelpful) {
-        await prisma.helpfulVote.delete({ where: { id: existing.id } });
-        await prisma.review.update({
+      if (existing) {
+        if (existing.isHelpful === isHelpful) {
+          await tx.helpfulVote.delete({ where: { id: existing.id } });
+          await tx.review.update({
+            where: { id: reviewId },
+            data: isHelpful
+              ? { helpfulCount: { decrement: 1 } }
+              : { notHelpfulCount: { decrement: 1 } },
+          });
+          return { voted: false, status: 200 };
+        }
+
+        await tx.helpfulVote.update({
+          where: { id: existing.id },
+          data: { isHelpful },
+        });
+        await tx.review.update({
           where: { id: reviewId },
           data: isHelpful
-            ? { helpfulCount: { decrement: 1 } }
-            : { notHelpfulCount: { decrement: 1 } },
+            ? { helpfulCount: { increment: 1 }, notHelpfulCount: { decrement: 1 } }
+            : { helpfulCount: { decrement: 1 }, notHelpfulCount: { increment: 1 } },
         });
-        return new Response(JSON.stringify({ voted: false }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return { voted: true, status: 200 };
       }
 
-      await prisma.helpfulVote.update({
-        where: { id: existing.id },
-        data: { isHelpful },
+      await tx.helpfulVote.create({
+        data: {
+          userId: session.user.id,
+          reviewId,
+          isHelpful,
+        },
       });
-      await prisma.review.update({
+      await tx.review.update({
         where: { id: reviewId },
         data: isHelpful
-          ? { helpfulCount: { increment: 1 }, notHelpfulCount: { decrement: 1 } }
-          : { helpfulCount: { decrement: 1 }, notHelpfulCount: { increment: 1 } },
+          ? { helpfulCount: { increment: 1 } }
+          : { notHelpfulCount: { increment: 1 } },
       });
-      return new Response(JSON.stringify({ voted: true }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
-    await prisma.helpfulVote.create({
-      data: {
-        userId: session.user.id,
-        reviewId,
-        isHelpful,
-      },
-    });
-    await prisma.review.update({
-      where: { id: reviewId },
-      data: isHelpful
-        ? { helpfulCount: { increment: 1 } }
-        : { notHelpfulCount: { increment: 1 } },
+      return { voted: true, status: 201 };
     });
 
-    return new Response(JSON.stringify({ voted: true }), {
-      status: 201,
+    return new Response(JSON.stringify({ voted: result.voted }), {
+      status: result.status,
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {

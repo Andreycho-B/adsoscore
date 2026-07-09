@@ -1,43 +1,45 @@
-# Astro Starter Kit: Minimal
+# SGVA Empresas - Evaluador de Empresas ADS
 
-```sh
-npm create astro@latest -- --template minimal
-```
+## 1. Visión General
+SGVA Empresas es una plataforma diseñada para evaluar y enriquecer ofertas de aprendizaje (ADS) provenientes del sistema del SENA. El sistema analiza la viabilidad, el perfil técnico y la reputación de las empresas oferentes para asegurar la calidad de las prácticas de aprendizaje mediante un motor de scoring basado en datos enriquecidos.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## 2. Stack Tecnológico
+- **Framework**: [Astro](https://astro.build/)
+- **ORM**: [Prisma](https://www.prisma.io/)
+- **Base de Datos**: PostgreSQL
+- **Autenticación**: OAuth (Implementación personalizada)
+- **API Integrations**: GitHub, RUES, SGVA
 
-## 🚀 Project Structure
+## 3. Configuración y Desarrollo
 
-Inside of your Astro project, you'll see the following folders and files:
+### Requisitos previos
+- Node.js (v20+)
+- PostgreSQL (Base de datos compatible)
 
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
+### Pasos de instalación
+1. **Instalar dependencias**:
+   ```bash
+   npm install
+   ```
+2. **Configurar variables de entorno**:
+   Copie el archivo `.env.example` a `.env` y configure las credenciales necesarias (Base de datos, tokens de APIs, etc.).
+   ```bash
+   cp .env.example .env
+   ```
+3. **Generar cliente Prisma**:
+   ```bash
+   npx prisma generate
+   ```
+4. **Iniciar servidor de desarrollo**:
+   ```bash
+   npm run dev
+   ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## 4. Estructura del Proyecto
+- `/prisma`: Definición del esquema de base de datos y migraciones.
+- `/src/pages`: Definición de rutas (páginas) y endpoints API del backend (Astro).
+- `/src/lib`: Lógica de negocio central (servicios de scoring, integraciones con APIs externas, cliente Prisma, utilidades).
+- `/src/components`: Componentes de interfaz de usuario.
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
-
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+## 5. Mantenimiento y Calidad
+Este proyecto sigue estándares de calidad rigurosos. Consulte el documento `docs/contexto_agente/PLAN_ACCION_CRITICO.md` para conocer el estado actual de la deuda técnica, las correcciones planeadas y la hoja de ruta para el despliegue en producción.
