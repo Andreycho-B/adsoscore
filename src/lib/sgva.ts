@@ -185,8 +185,13 @@ export async function fetchOffersFromSGVA(
       // Continuar con la siguiente oferta ante cualquier error individual
     }
 
-    await new Promise((r) => setTimeout(r, 200));
+    if ((i + 1) % 20 === 0) {
+      console.log(`SGVA scraper: ${i + 1}/${solicitudIds.length} solicitudes procesadas`);
+    }
+
+    await new Promise((r) => setTimeout(r, 50));
   }
 
+  console.log(`SGVA scraper: ${offers.length} ofertas obtenidas de ${solicitudIds.length} solicitudes`);
   return offers;
 }

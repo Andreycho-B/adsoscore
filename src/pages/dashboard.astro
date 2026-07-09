@@ -9,6 +9,12 @@ if (!session.user) {
   return Astro.redirect('/login');
 }
 
+const user = await prisma.user.findUnique({
+  where: { id: session.user.id },
+  select: { especialidadId: true },
+});
+const hasSynced = !!user?.especialidadId;
+
 const url = new URL(Astro.request.url);
 const departamento = url.searchParams.get('departamento') || '';
 const ciudad = url.searchParams.get('ciudad') || '';
@@ -29,11 +35,14 @@ if (modalidad) {
   where.modalidad = { equals: modalidad, mode: 'insensitive' };
 }
 
-const offers = await prisma.offer.findMany({
-  where,
-  orderBy: { score: 'desc' },
-  take: 50,
-});
+let offers: any[] = [];
+if (hasSynced) {
+  offers = await prisma.offer.findMany({
+    where,
+    orderBy: { score: 'desc' },
+    take: 50,
+  });
+}
 
 function buildFilterUrl(params: Record<string, string>) {
   const searchParams = new URLSearchParams();
@@ -136,10 +145,16 @@ function buildFilterUrl(params: Record<string, string>) {
         </div>
       </div>
 
-      {offers.length === 0 ? (
+      {!hasSynced ? (
+        <div style="background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:64px 24px;text-align:center;">
+          <div style="font-size:48px;margin-bottom:16px;">📋</div>
+          <h2 style="font-size:22px;font-weight:600;margin-bottom:8px;">Sincroniza tus datos del SGVA</h2>
+          <p style="font-size:14px;color:var(--color-text-secondary);max-width:440px;margin:0 auto 24px;">Ingresa tu numero de documento y contraseña del portal SGVA para obtener las ofertas de aprendizaje mas recientes y sus evaluaciones.</p>
+          <button id="btn-sgva-sync-main" style="height:40px;padding:0 24px;font-size:14px;font-weight:600;background:var(--color-primary);color:#fff;border:none;border-radius:8px;cursor:pointer;">Sincronizar con SGVA</button>
+        </div>
+      ) : offers.length === 0 ? (
         <div style="background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:48px 24px;text-align:center;">
-          <p style="font-size:16px;color:var(--color-text-secondary);">No se encontraron ofertas</p>
-          <p style="font-size:13px;color:var(--color-text-tertiary);margin-top:8px;">Usa el boton "Sincronizar con SGVA" de arriba para cargar las ofertas mas recientes.</p>
+          <p style="font-size:16px;color:var(--color-text-secondary);">No se encontraron ofertas para los filtros seleccionados</p>
         </div>
       ) : (
         <div style="display:grid;grid-template-columns:repeat(2, 1fr);gap:16px;">
@@ -187,28 +202,32 @@ function buildFilterUrl(params: Record<string, string>) {
 
 <script>
   const btnSync = document.getElementById('btn-sgva-sync');
+  const btnSyncMain = document.getElementById('btn-sgva-sync-main');
   const formContainer = document.getElementById('sgva-form');
   const btnSubmit = document.getElementById('btn-sgva-submit');
   const btnCancel = document.getElementById('btn-sgva-cancel');
-  const documentInput = document.getElementById('sgva-document');
-  const passwordInput = document.getElementById('sgva-password');
+  const docInput = document.getElementById('sgva-document');
+  const passInput = document.getElementById('sgva-password');
   const statusEl = document.getElementById('sgva-status');
   const syncSection = document.getElementById('sgva-sync');
 
-  btnSync.addEventListener('click', () => {
-    syncSection.style.display = 'none';
+  function showForm() {
+    if (syncSection) syncSection.style.display = 'none';
     formContainer.style.display = 'block';
-  });
+  }
+
+  if (btnSync) btnSync.addEventListener('click', showForm);
+  if (btnSyncMain) btnSyncMain.addEventListener('click', showForm);
 
   btnCancel.addEventListener('click', () => {
     formContainer.style.display = 'none';
-    syncSection.style.display = 'flex';
+    if (syncSection) syncSection.style.display = 'block';
   });
 
   btnSubmit.addEventListener('click', async () => {
-    const document = documentInput.value.trim();
-    const password = passwordInput.value;
-    if (!document || !password) {
+    const doc = docInput.value.trim();
+    const password = passInput.value;
+    if (!doc || !password) {
       statusEl.textContent = 'Completa ambos campos.';
       statusEl.style.display = 'block';
       statusEl.style.color = 'var(--color-error)';
@@ -219,12 +238,17 @@ function buildFilterUrl(params: Record<string, string>) {
     btnSubmit.textContent = 'Sincronizando...';
     statusEl.style.display = 'none';
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 180000);
+
     try {
       const res = await fetch('/api/sgva/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ document, password }),
+        body: JSON.stringify({ document: doc, password }),
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
 
       const data = await res.json();
 
@@ -238,7 +262,8 @@ function buildFilterUrl(params: Record<string, string>) {
 
       setTimeout(() => window.location.reload(), 1500);
     } catch (err) {
-      statusEl.textContent = 'Error: ' + err.message;
+      clearTimeout(timeout);
+      statusEl.textContent = err.name === 'AbortError' ? 'Error: la sincronizacion tardó demasiado. Intenta de nuevo.' : 'Error: ' + err.message;
       statusEl.style.color = 'var(--color-error)';
       statusEl.style.display = 'block';
       btnSubmit.disabled = false;
