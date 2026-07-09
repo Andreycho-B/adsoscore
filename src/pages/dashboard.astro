@@ -13,16 +13,21 @@ const url = new URL(Astro.request.url);
 const departamento = url.searchParams.get('departamento') || '';
 const ciudad = url.searchParams.get('ciudad') || '';
 const modalidad = url.searchParams.get('modalidad') || '';
-const tipoEmpresa = url.searchParams.get('tipoEmpresa') || '';
 
 const where: any = {
   isActive: true,
   isVisible: true,
 };
 
-if (departamento) where.departamento = departamento;
-if (ciudad) where.ciudad = ciudad;
-if (modalidad) where.modalidad = modalidad;
+if (departamento) {
+  where.departamento = { contains: departamento, mode: 'insensitive' };
+}
+if (ciudad) {
+  where.ciudad = { contains: ciudad, mode: 'insensitive' };
+}
+if (modalidad) {
+  where.modalidad = { equals: modalidad, mode: 'insensitive' };
+}
 
 const offers = await prisma.offer.findMany({
   where,
@@ -35,11 +40,9 @@ function buildFilterUrl(params: Record<string, string>) {
   if (params.departamento) searchParams.set('departamento', params.departamento);
   if (params.ciudad) searchParams.set('ciudad', params.ciudad);
   if (params.modalidad) searchParams.set('modalidad', params.modalidad);
-  if (params.tipoEmpresa) searchParams.set('tipoEmpresa', params.tipoEmpresa);
   const qs = searchParams.toString();
   return `/dashboard${qs ? '?' + qs : ''}`;
 }
-
 ---
 
 <BaseLayout title="Dashboard">
@@ -63,15 +66,36 @@ function buildFilterUrl(params: Record<string, string>) {
     <main class="wrap" id="main-content" style="padding-top:32px;padding-bottom:48px;">
       <h1 class="sr-only">Dashboard de ofertas</h1>
 
+      <div id="sgva-sync" style="background:var(--color-primary);border-radius:10px;padding:20px;margin-bottom:24px;color:#fff;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+          <div>
+            <p style="font-weight:600;font-size:16px;margin-bottom:4px;">Sincronizar con SGVA</p>
+            <p style="font-size:13px;opacity:0.85;">Ingresa tu numero de documento y contraseña del SGVA para obtener las ofertas mas recientes.</p>
+          </div>
+          <button id="btn-sgva-sync" style="height:36px;padding:0 20px;font-size:14px;font-weight:600;background:#fff;color:var(--color-primary);border:none;border-radius:8px;cursor:pointer;white-space:nowrap;">Sincronizar ahora</button>
+        </div>
+      </div>
+
+      <div id="sgva-form" style="display:none;background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:20px;margin-bottom:24px;">
+        <p style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;color:var(--color-primary);margin-bottom:16px;">Credenciales SGVA</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <input id="sgva-document" type="text" placeholder="Numero de documento" style="flex:1;min-width:180px;height:36px;padding:0 12px;font-size:14px;border:1px solid var(--color-border);border-radius:8px;background:var(--color-bg-container);color:var(--color-text);font-family:var(--font-sans);outline:none;">
+          <input id="sgva-password" type="password" placeholder="Contraseña" style="flex:1;min-width:180px;height:36px;padding:0 12px;font-size:14px;border:1px solid var(--color-border);border-radius:8px;background:var(--color-bg-container);color:var(--color-text);font-family:var(--font-sans);outline:none;">
+          <button id="btn-sgva-submit" style="height:36px;padding:0 20px;font-size:14px;font-weight:600;background:var(--color-primary);color:#fff;border:none;border-radius:8px;cursor:pointer;">Sincronizar</button>
+          <button id="btn-sgva-cancel" style="height:36px;padding:0 20px;font-size:14px;font-weight:500;background:none;border:1px solid var(--color-border);border-radius:8px;cursor:pointer;color:var(--color-text-secondary);">Cancelar</button>
+        </div>
+        <p id="sgva-status" style="margin-top:12px;font-size:13px;display:none;"></p>
+      </div>
+
       <div style="background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:20px;margin-bottom:24px;">
         <p style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;color:var(--color-primary);margin-bottom:16px;">Filtros</p>
-        <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:16px;">
+        <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;">
           <div>
             <label for="departamento" style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px;font-size:12px;font-weight:600;color:var(--color-text);">Departamento</label>
             <select
               id="departamento"
               style="box-sizing:border-box;width:100%;font-family:var(--font-sans);font-size:14px;color:var(--color-text);background:var(--color-bg-container);border:1px solid var(--color-border);border-radius:8px;outline:none;height:32px;padding:0 12px;"
-              onchange={`window.location='${buildFilterUrl({ departamento: '__VAL__', ciudad, modalidad, tipoEmpresa })}'.replace('__VAL__', this.value)`}
+              onchange={`window.location='${buildFilterUrl({ departamento: '__VAL__', ciudad, modalidad })}'.replace('__VAL__', this.value)`}
             >
               <option value="">Todos</option>
               <option value="Caldas" selected={departamento === 'Caldas'}>Caldas</option>
@@ -86,7 +110,7 @@ function buildFilterUrl(params: Record<string, string>) {
             <select
               id="ciudad"
               style="box-sizing:border-box;width:100%;font-family:var(--font-sans);font-size:14px;color:var(--color-text);background:var(--color-bg-container);border:1px solid var(--color-border);border-radius:8px;outline:none;height:32px;padding:0 12px;"
-              onchange={`window.location='${buildFilterUrl({ departamento, ciudad: '__VAL__', modalidad, tipoEmpresa })}'.replace('__VAL__', this.value)`}
+              onchange={`window.location='${buildFilterUrl({ departamento, ciudad: '__VAL__', modalidad })}'.replace('__VAL__', this.value)`}
             >
               <option value="">Todas</option>
               <option value="Manizales" selected={ciudad === 'Manizales'}>Manizales</option>
@@ -101,26 +125,12 @@ function buildFilterUrl(params: Record<string, string>) {
             <select
               id="modalidad"
               style="box-sizing:border-box;width:100%;font-family:var(--font-sans);font-size:14px;color:var(--color-text);background:var(--color-bg-container);border:1px solid var(--color-border);border-radius:8px;outline:none;height:32px;padding:0 12px;"
-              onchange={`window.location='${buildFilterUrl({ departamento, ciudad, modalidad: '__VAL__', tipoEmpresa })}'.replace('__VAL__', this.value)`}
+              onchange={`window.location='${buildFilterUrl({ departamento, ciudad, modalidad: '__VAL__' })}'.replace('__VAL__', this.value)`}
             >
               <option value="">Todas</option>
               <option value="Remoto" selected={modalidad === 'Remoto'}>Remoto</option>
               <option value="Presencial" selected={modalidad === 'Presencial'}>Presencial</option>
               <option value="Hibrido" selected={modalidad === 'Hibrido'}>Hibrido</option>
-            </select>
-          </div>
-          <div>
-            <label for="tipo-empresa" style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px;font-size:12px;font-weight:600;color:var(--color-text);">Tipo de empresa</label>
-            <select
-              id="tipo-empresa"
-              style="box-sizing:border-box;width:100%;font-family:var(--font-sans);font-size:14px;color:var(--color-text);background:var(--color-bg-container);border:1px solid var(--color-border);border-radius:8px;outline:none;height:32px;padding:0 12px;"
-              onchange={`window.location='${buildFilterUrl({ departamento, ciudad, modalidad, tipoEmpresa: '__VAL__' })}'.replace('__VAL__', this.value)`}
-            >
-              <option value="">Todas</option>
-              <option value="startup" selected={tipoEmpresa === 'startup'}>Startup</option>
-              <option value="consultora" selected={tipoEmpresa === 'consultora'}>Consultora</option>
-              <option value="enterprise" selected={tipoEmpresa === 'enterprise'}>Enterprise</option>
-              <option value="fintech" selected={tipoEmpresa === 'fintech'}>Fintech</option>
             </select>
           </div>
         </div>
@@ -129,6 +139,7 @@ function buildFilterUrl(params: Record<string, string>) {
       {offers.length === 0 ? (
         <div style="background:var(--color-bg-container);border:1px solid var(--color-border-secondary);border-radius:10px;padding:48px 24px;text-align:center;">
           <p style="font-size:16px;color:var(--color-text-secondary);">No se encontraron ofertas</p>
+          <p style="font-size:13px;color:var(--color-text-tertiary);margin-top:8px;">Usa el boton "Sincronizar con SGVA" de arriba para cargar las ofertas mas recientes.</p>
         </div>
       ) : (
         <div style="display:grid;grid-template-columns:repeat(2, 1fr);gap:16px;">
@@ -174,13 +185,75 @@ function buildFilterUrl(params: Record<string, string>) {
   </div>
 </BaseLayout>
 
+<script>
+  const btnSync = document.getElementById('btn-sgva-sync');
+  const formContainer = document.getElementById('sgva-form');
+  const btnSubmit = document.getElementById('btn-sgva-submit');
+  const btnCancel = document.getElementById('btn-sgva-cancel');
+  const documentInput = document.getElementById('sgva-document');
+  const passwordInput = document.getElementById('sgva-password');
+  const statusEl = document.getElementById('sgva-status');
+  const syncSection = document.getElementById('sgva-sync');
+
+  btnSync.addEventListener('click', () => {
+    syncSection.style.display = 'none';
+    formContainer.style.display = 'block';
+  });
+
+  btnCancel.addEventListener('click', () => {
+    formContainer.style.display = 'none';
+    syncSection.style.display = 'flex';
+  });
+
+  btnSubmit.addEventListener('click', async () => {
+    const document = documentInput.value.trim();
+    const password = passwordInput.value;
+    if (!document || !password) {
+      statusEl.textContent = 'Completa ambos campos.';
+      statusEl.style.display = 'block';
+      statusEl.style.color = 'var(--color-error)';
+      return;
+    }
+
+    btnSubmit.disabled = true;
+    btnSubmit.textContent = 'Sincronizando...';
+    statusEl.style.display = 'none';
+
+    try {
+      const res = await fetch('/api/sgva/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ document, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Error al sincronizar');
+      }
+
+      statusEl.textContent = `Sincronizacion exitosa: ${data.total} ofertas (${data.created} nuevas, ${data.updated} actualizadas). Recargando...`;
+      statusEl.style.color = 'var(--color-success)';
+      statusEl.style.display = 'block';
+
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (err) {
+      statusEl.textContent = 'Error: ' + err.message;
+      statusEl.style.color = 'var(--color-error)';
+      statusEl.style.display = 'block';
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = 'Sincronizar';
+    }
+  });
+</script>
+
 <style>
   @media (max-width: 768px) {
     main.wrap {
       padding-left: 16px;
       padding-right: 16px;
     }
-    div[style*="grid-template-columns:repeat(4, 1fr)"] {
+    div[style*="grid-template-columns:repeat(3, 1fr)"] {
       grid-template-columns: 1fr !important;
     }
     div[style*="grid-template-columns:repeat(2, 1fr)"] {
