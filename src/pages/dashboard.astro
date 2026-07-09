@@ -54,8 +54,12 @@ if (hasSynced) {
   });
   departamentos = deptResult.map((r) => r.departamento).filter(Boolean) as string[];
 
+  const cityWhere: any = { isActive: true, isVisible: true };
+  if (departamento) {
+    cityWhere.departamento = { contains: departamento, mode: 'insensitive' };
+  }
   const cityResult = await prisma.offer.findMany({
-    where: { isActive: true, isVisible: true },
+    where: cityWhere,
     select: { ciudad: true },
     distinct: ['ciudad'],
     orderBy: { ciudad: 'asc' },
@@ -160,7 +164,7 @@ function buildFilterUrl(params: Record<string, string>) {
             <select
               id="departamento"
               style="box-sizing:border-box;width:100%;font-family:var(--font-sans);font-size:14px;color:var(--color-text);background:var(--color-bg-container);border:1px solid var(--color-border);border-radius:8px;outline:none;height:32px;padding:0 12px;"
-              onchange={`window.location='${buildFilterUrl({ departamento: '__VAL__', ciudad, modalidad })}'.replace('__VAL__', this.value)`}
+              onchange={`window.location='${buildFilterUrl({ departamento: '__VAL__', ciudad: '', modalidad })}'.replace('__VAL__', this.value)`}
             >
               <option value="">Todos</option>
               {departamentos.map((d) => (

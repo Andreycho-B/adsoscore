@@ -287,7 +287,7 @@ export function detectModalidad(funciones: string, perfil: string): string {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
-  if (/\b(remoto|teletrabajo|home\s*office|trabajo\s*(en\s+)?casa|virtual)\b/.test(lower)) {
+  if (/\b(remoto|teletrabajo|home\s*office|trabajo\s*(en\s+)?casa)\b/.test(lower)) {
     return "Remoto";
   }
   if (/\b(hibrido|mixto|semipresencial)\b/.test(lower)) {
