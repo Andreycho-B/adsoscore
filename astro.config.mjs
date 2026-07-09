@@ -5,13 +5,13 @@ import { fileURLToPath } from 'node:url';
 
 import tailwindcss from '@tailwindcss/vite';
 import react from '@astrojs/react';
-import vercel from '@astrojs/vercel';
+import node from '@astrojs/node';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   output: 'server',
-  adapter: vercel(),
+  adapter: node({ mode: 'standalone' }),
   vite: {
     plugins: [tailwindcss()],
     ssr: {

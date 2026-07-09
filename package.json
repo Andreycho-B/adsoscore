@@ -10,11 +10,12 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
+    "start": "node ./dist/server/entry.mjs",
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@astrojs/node": "^11.0.2",
     "@astrojs/react": "^6.0.1",
-    "@astrojs/vercel": "^11.0.2",
     "@auth/core": "^0.41.2",
     "@auth/prisma-adapter": "^2.11.2",
     "@prisma/adapter-pg": "^7.8.0",
@@ -35,7 +36,7 @@
     "tailwindcss": "^4.3.2"
   },
   "prisma": {
-    "seed": "node prisma/seed.ts"
+    "seed": "npx tsx prisma/seed.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

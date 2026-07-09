@@ -8,14 +8,21 @@ datasource db {
 
 // Usuarios
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique @db.VarChar(255)
-  name          String?   @db.VarChar(100)
-  image         String?   @db.VarChar(500)
-  provider      String    @db.VarChar(20) // "google" | "github"
-  providerId    String    @db.VarChar(255)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id             String   @id @default(cuid())
+  email          String   @unique @db.VarChar(255)
+  name           String?  @db.VarChar(100)
+  image          String?  @db.VarChar(500)
+  document       String?  @unique @db.VarChar(20) // Cédula
+  especialidadId String?  @db.VarChar(50) // ID programa ADS SGVA
+  provider       String   @db.VarChar(20) // "google" | "github"
+  providerId     String   @db.VarChar(255)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Preferencias
+  preferredCities    String[]
+  preferredModality  String[]
+  emailNotifications Boolean  @default(true)
 
   reviews       Review[]
   favorites     Favorite[]
@@ -25,54 +32,57 @@ model User {
   helpfulVotes  HelpfulVote[]
 
   @@unique([provider, providerId])
+  @@index([email])
+  @@index([document])
 }
 
 // Ofertas de aprendizaje del SGVA
 model Offer {
-  id            String    @id @default(cuid())
-  sgvaId        String    @unique @db.VarChar(50)
-  titulo        String    @db.VarChar(200)
-  empresa       String    @db.VarChar(200)
-  nit           String?   @db.VarChar(20)
-  descripcion   String?   @db.Text()
-  funciones     String?   @db.Text()
-  perfil        String?   @db.Text()
-  ciudad        String?   @db.VarChar(100)
-  departamento  String?   @db.VarChar(100)
-  direccion     String?   @db.VarChar(300)
-  telefono      String?   @db.VarChar(20)
-  contacto      String?   @db.VarChar(100)
-  email         String?   @db.VarChar(255)
-  modalidad     String?   @db.VarChar(20) // "Presencial" | "Remoto" | "Hibrido"
+  id               String    @id @default(cuid())
+  sgvaId           String    @unique @db.VarChar(50)
+  titulo           String    @db.VarChar(200)
+  empresa          String    @db.VarChar(200)
+  nit              String?   @db.VarChar(20)
+  descripcion      String?   @db.Text()
+  funciones        String?   @db.Text()
+  perfil           String?   @db.Text()
+  ciudad           String?   @db.VarChar(100)
+  departamento     String?   @db.VarChar(100)
+  direccion        String?   @db.VarChar(300)
+  telefono         String?   @db.VarChar(20)
+  contacto         String?   @db.VarChar(100)
+  email            String?   @db.VarChar(255)
+  modalidad        String?   @db.VarChar(20) // "Presencial" | "Remoto" | "Hibrido"
   fechaPublicacion DateTime?
-  fechaCierre   DateTime?
+  fechaCierre      DateTime?
 
-  score         Float     @default(0)
-  scoreGitHub   Float     @default(0)
-  scoreFunciones Float    @default(0)
-  scoreRUES     Float     @default(0)
-  scoreUbicacion Float    @default(0)
-  scoreModalidad Float    @default(0)
-  scoreResenas  Float     @default(0)
-  scoreLinkedIn Float     @default(0)
-  scoreTamano   Float     @default(0)
-  scoreAntiguedad Float   @default(0)
+  score           Decimal? @default(0)
+  scoreGitHub     Decimal? @default(0)
+  scoreFunciones  Decimal? @default(0)
+  scoreRUES       Decimal? @default(0)
+  scoreUbicacion  Decimal? @default(0)
+  scoreModalidad  Decimal? @default(0)
+  scoreResenas    Decimal? @default(0)
+  scoreLinkedIn   Decimal? @default(0)
+  scoreTamano     Decimal? @default(0)
+  scoreAntiguedad Decimal? @default(0)
 
   ruesData      Json?
   githubData    Json?
   linkedinData  Json?
   glassdoorData Json?
 
-  isActive      Boolean   @default(true)
-  isVisible     Boolean   @default(true)
+  isRelevantForAds Boolean @default(false)
+  isActive         Boolean @default(true)
+  isVisible        Boolean @default(true)
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  reviews       Review[]
-  favorites     Favorite[]
-  tags          OfferTag[]
-  reports       Report[]
+  reviews   Review[]
+  favorites Favorite[]
+  tags      OfferTag[]
+  reports   Report[]
 
   @@index([score(sort: Desc)])
   @@index([departamento])
@@ -83,41 +93,52 @@ model Offer {
 
 // Resenas de usuarios
 model Review {
-  id            String    @id @default(cuid())
-  content       String    @db.Text()
-  rating        Int       // 1-5
-  helpfulCount  Int       @default(0)
-  notHelpfulCount Int     @default(0)
+  id              String       @id @default(cuid())
+  content         String       @db.Text()
+  rating          Int // 1-5
+  pros            String?      @db.Text
+  cons            String?      @db.Text
+  recommend       Boolean      @default(true)
+  helpfulCount    Int          @default(0)
+  notHelpfulCount Int          @default(0)
+  status          ReviewStatus @default(PENDING)
 
-  userId        String
-  user          User      @relation(fields: [userId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-  offerId       String
-  offer         Offer     @relation(fields: [offerId], references: [id])
+  offerId String
+  offer   Offer  @relation(fields: [offerId], references: [id])
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  helpfulVotes  HelpfulVote[]
+  helpfulVotes HelpfulVote[]
 
   @@unique([userId, offerId])
   @@index([userId])
   @@index([offerId])
+  @@index([status])
   @@index([helpfulCount(sort: Desc)])
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 // Votos de utilidad
 model HelpfulVote {
-  id            String    @id @default(cuid())
-  isHelpful     Boolean
+  id        String  @id @default(cuid())
+  isHelpful Boolean
 
-  userId        String
-  user          User      @relation(fields: [userId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-  reviewId      String
-  review        Review    @relation(fields: [reviewId], references: [id])
+  reviewId String
+  review   Review @relation(fields: [reviewId], references: [id])
 
-  createdAt     DateTime  @default(now())
+  createdAt DateTime @default(now())
 
   @@unique([userId, reviewId])
   @@index([reviewId])
@@ -125,15 +146,15 @@ model HelpfulVote {
 
 // Favoritos
 model Favorite {
-  id            String    @id @default(cuid())
+  id String @id @default(cuid())
 
-  userId        String
-  user          User      @relation(fields: [userId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-  offerId       String
-  offer         Offer     @relation(fields: [offerId], references: [id])
+  offerId String
+  offer   Offer  @relation(fields: [offerId], references: [id])
 
-  createdAt     DateTime  @default(now())
+  createdAt DateTime @default(now())
 
   @@unique([userId, offerId])
   @@index([offerId])
@@ -141,22 +162,22 @@ model Favorite {
 
 // Tags para empresas
 model Tag {
-  id            String    @id @default(cuid())
-  name          String    @unique @db.VarChar(50)
-  slug          String    @unique @db.VarChar(50)
+  id   String @id @default(cuid())
+  name String @unique @db.VarChar(50)
+  slug String @unique @db.VarChar(50)
 
-  offers        OfferTag[]
+  offers OfferTag[]
 }
 
 // Relacion offers-tags
 model OfferTag {
-  id            String    @id @default(cuid())
+  id String @id @default(cuid())
 
-  offerId       String
-  offer         Offer     @relation(fields: [offerId], references: [id])
+  offerId String
+  offer   Offer  @relation(fields: [offerId], references: [id])
 
-  tagId         String
-  tag           Tag       @relation(fields: [tagId], references: [id])
+  tagId String
+  tag   Tag    @relation(fields: [tagId], references: [id])
 
   @@unique([offerId, tagId])
   @@index([tagId])
@@ -164,36 +185,36 @@ model OfferTag {
 
 // Notificaciones in-app
 model Notification {
-  id            String    @id @default(cuid())
-  title         String    @db.VarChar(200)
-  message       String    @db.Text()
-  type          String    @db.VarChar(30) // "new_offer" | "review_update" | "system"
-  isRead        Boolean   @default(false)
-  link          String?   @db.VarChar(500)
+  id      String  @id @default(cuid())
+  title   String  @db.VarChar(200)
+  message String  @db.Text()
+  type    String  @db.VarChar(30) // "new_offer" | "review_update" | "system"
+  isRead  Boolean @default(false)
+  link    String? @db.VarChar(500)
 
-  userId        String
-  user          User      @relation(fields: [userId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-  createdAt     DateTime  @default(now())
+  createdAt DateTime @default(now())
 
   @@index([userId, isRead])
 }
 
 // Reportes de ofertas
 model Report {
-  id            String    @id @default(cuid())
-  reason        String    @db.VarChar(30) // "no_existe" | "empresa_falsa" | "info_incorrecta" | "otro"
-  description   String?   @db.Text()
-  status        String    @default("pending") @db.VarChar(20) // "pending" | "reviewed" | "resolved"
+  id          String  @id @default(cuid())
+  reason      String  @db.VarChar(30) // "no_existe" | "empresa_falsa" | "info_incorrecta" | "otro"
+  description String? @db.Text()
+  status      String  @default("pending") @db.VarChar(20) // "pending" | "reviewed" | "resolved"
 
-  userId        String
-  user          User      @relation(fields: [userId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-  offerId       String
-  offer         Offer     @relation(fields: [offerId], references: [id])
+  offerId String
+  offer   Offer  @relation(fields: [offerId], references: [id])
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([status])
   @@index([offerId])
@@ -201,26 +222,26 @@ model Report {
 
 // Consentimiento de usuario (LGPD)
 model Consent {
-  id            String    @id @default(cuid())
-  consentType   String    @db.VarChar(30) // "marketing" | "reviews" | "analytics"
-  granted       Boolean
-  grantedAt     DateTime  @default(now())
-  revokedAt     DateTime?
-  ipAddress     String?   @db.VarChar(45) // IPv6 max
-  userAgent     String?   @db.VarChar(500)
+  id          String    @id @default(cuid())
+  consentType String    @db.VarChar(30) // "marketing" | "reviews" | "analytics"
+  granted     Boolean
+  grantedAt   DateTime  @default(now())
+  revokedAt   DateTime?
+  ipAddress   String?   @db.VarChar(45) // IPv6 max
+  userAgent   String?   @db.VarChar(500)
 
-  userId        String
-  user          User      @relation(fields: [userId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
   @@unique([userId, consentType])
 }
 
 // Configuracion del sistema
 model SystemConfig {
-  id            String    @id @default(cuid())
-  key           String    @unique @db.VarChar(100)
-  value         String    @db.Text()
-  description   String?   @db.VarChar(500)
+  id          String  @id @default(cuid())
+  key         String  @unique @db.VarChar(100)
+  value       String  @db.Text()
+  description String? @db.VarChar(500)
 
-  updatedAt     DateTime  @updatedAt
+  updatedAt DateTime @updatedAt
 }

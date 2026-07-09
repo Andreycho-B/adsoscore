@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: sgva-empresas
+    env: docker
+    plan: free
+    dockerfile: ./Dockerfile
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sgva-db
+          property: connectionString
+      - key: NODE_ENV
+        value: production
+      - key: AUTH_SECRET
+        generate: true
+      - key: GITHUB_TOKEN
+        sync: false
+      # Añadir el resto de variables necesarias aquí
+    autoDeploy: true
+
+databases:
+  - name: sgva-db
+    plan: free

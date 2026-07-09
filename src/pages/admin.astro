@@ -482,7 +482,7 @@ const maintenanceMode = configEntries.find((c) => c.key === 'maintenanceMode');
     statusEl.textContent = 'Obteniendo ofertas...';
 
     try {
-      const offersRes = await fetch('/api/offers');
+      const offersRes = await fetch('/api/offers?limit=1000');
       const offersData = await offersRes.json();
       const offerIds = (offersData.offers || offersData || []).map((o: { id: string }) => o.id);
 

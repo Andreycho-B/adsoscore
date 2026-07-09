@@ -43,10 +43,46 @@ export const POST: APIRoute = async ({ request }) => {
 
     const ruesScore = result.ruesActivo ? 10 : 0;
 
+    const currentOffer = await prisma.offer.findUnique({
+      where: { id: offerId },
+      select: {
+        scoreGitHub: true,
+        scoreFunciones: true,
+        scoreUbicacion: true,
+        scoreModalidad: true,
+        scoreResenas: true,
+        scoreLinkedIn: true,
+        scoreTamano: true,
+        scoreAntiguedad: true,
+      },
+    });
+
+    const subScores = currentOffer || {
+      scoreGitHub: 0,
+      scoreFunciones: 0,
+      scoreUbicacion: 0,
+      scoreModalidad: 0,
+      scoreResenas: 0,
+      scoreLinkedIn: 0,
+      scoreTamano: 0,
+      scoreAntiguedad: 0,
+    };
+
+    const newScore = ruesScore +
+      (subScores.scoreGitHub ?? 0) +
+      (subScores.scoreFunciones ?? 0) +
+      (subScores.scoreUbicacion ?? 0) +
+      (subScores.scoreModalidad ?? 0) +
+      (subScores.scoreResenas ?? 0) +
+      (subScores.scoreLinkedIn ?? 0) +
+      (subScores.scoreTamano ?? 0) +
+      (subScores.scoreAntiguedad ?? 0);
+
     await prisma.offer.update({
       where: { id: offerId },
       data: {
         scoreRUES: ruesScore,
+        score: newScore,
         ruesData: {
           ruesActivo: result.ruesActivo,
           razonSocial: result.razonSocial,

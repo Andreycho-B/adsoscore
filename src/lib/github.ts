@@ -22,18 +22,25 @@ function normalizeCompanyName(name: string): string {
 }
 
 async function fetchGitHubApi(url: string): Promise<any> {
-  const response = await fetch(url, {
-    headers: {
-      Accept: 'application/vnd.github.v3+json',
-      'User-Agent': 'ADSOScore-Enrichment-Module',
-    },
-  });
+  const headers: Record<string, string> = {
+    Accept: 'application/vnd.github.v3+json',
+    'User-Agent': 'ADSOScore-Enrichment-Module',
+  };
+
+  const token = import.meta.env.GITHUB_TOKEN || (typeof process !== 'undefined' ? process.env.GITHUB_TOKEN : undefined);
+  if (token) {
+    headers['Authorization'] = `token ${token}`;
+  }
+
+  const response = await fetch(url, { headers });
 
   if (response.status === 403) {
+    console.warn('GitHub API Rate Limit hit or forbidden');
     return null;
   }
 
   if (!response.ok) {
+    console.error(`GitHub API Error: ${response.status} ${response.statusText}`);
     return null;
   }
 

@@ -120,6 +120,16 @@ export async function exchangeGoogleCode(code: string): Promise<SessionUser | nu
       where: { provider_providerId: { provider: 'google', providerId: userData.id } },
     });
 
+    // Control de colisión de email para evitar crash P2002
+    const userWithEmail = await prisma.user.findUnique({
+      where: { email: userData.email },
+    });
+
+    if (userWithEmail && (!existingUser || existingUser.id !== userWithEmail.id)) {
+      console.error(`Email collision: ${userData.email} already exists under provider ${userWithEmail.provider}`);
+      throw new Error('email_collision');
+    }
+
     let user;
     if (existingUser) {
       user = await prisma.user.update({
@@ -215,6 +225,16 @@ export async function exchangeGitHubCode(code: string): Promise<SessionUser | nu
     const existingUser = await prisma.user.findUnique({
       where: { provider_providerId: { provider: 'github', providerId } },
     });
+
+    // Control de colisión de email para evitar crash P2002
+    const userWithEmail = await prisma.user.findUnique({
+      where: { email: primaryEmail },
+    });
+
+    if (userWithEmail && (!existingUser || existingUser.id !== userWithEmail.id)) {
+      console.error(`Email collision: ${primaryEmail} already exists under provider ${userWithEmail.provider}`);
+      throw new Error('email_collision');
+    }
 
     let user;
     if (existingUser) {
