@@ -88,7 +88,7 @@ export const POST: APIRoute = async (context) => {
         scoreAntiguedad: breakdown["fecha_cierre"] ?? 0,
         isRelevantForAds: isRelevant,
         isActive: true,
-        isVisible: isRelevant,
+        isVisible: true,
       };
 
       const existing = await prisma.offer.findUnique({
